@@ -26,4 +26,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Button
+        android:id="@+id/CreateAccountGOTO"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="GOTOCreateAccount"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="115dp"
+        tools:layout_editor_absoluteY="245dp" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
