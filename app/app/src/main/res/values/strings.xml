@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">MeetApp</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="title">Title</string>
+    <string name="forgot_password">Forgot password</string>
+    <string name="no_account">Need an account? Create one</string>
+    <string name="confirm_password">Confirm password</string>
+    <string name="create_account">Create Account</string>
+    <string name="gender">Gender</string>
+    <string name="male">Male</string>
+    <string name="female">Female</string>
+    <string name="date_birth">Date of birth</string>
 </resources>
