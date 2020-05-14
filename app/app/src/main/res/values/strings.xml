@@ -5,6 +5,7 @@
     <string name="first_name">First Name</string>
     <string name="last_name">Last Name</string>
     <string name="title">Title</string>
+    <string name="login">Login</string>
     <string name="forgot_password">Forgot password</string>
     <string name="no_account">Need an account? Create one</string>
     <string name="confirm_password">Confirm password</string>

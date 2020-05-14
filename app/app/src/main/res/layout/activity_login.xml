@@ -9,15 +9,62 @@
     tools:context=".LoginActivity">
     <ImageView
         android:layout_width="match_parent"
-        android:paddingTop="5dp"
+        android:paddingTop="10dp"
         android:layout_height="0dp"
-        android:layout_weight="30"
+        android:layout_weight="40"
+        android:elevation="5dp"
         android:src="@drawable/meet_app_logo"
         android:contentDescription="@string/app_name">
     </ImageView>
     <EditText
+        android:id="@+id/emailEditTxt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:hint="@string/email"/>
+        android:inputType="textEmailAddress"
+        android:layout_marginTop="80dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        android:drawableStart="@drawable/baseline_email_black_24"
+        android:hint="@string/email"
+        android:importantForAutofill="no" />
+    <EditText
+        android:id="@+id/passEditTxt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="10dp"
+        android:drawableStart="@drawable/baseline_vpn_key_black_24"
+        android:hint="@string/password"
+        android:importantForAutofill="no"/>
+
+    <TextView
+        android:id="@+id/forgotPassTxt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#f00"
+        android:layout_marginStart="20dp"
+
+        android:text="@string/forgot_password"/>
+    <Button
+        android:id="@+id/loginBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        android:text="@string/login"/>
+    <TextView
+        android:id="@+id/noAccTxt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/no_account"
+        android:textColor="#f00"
+        android:layout_marginStart="20dp"
+        />
+
 </LinearLayout>

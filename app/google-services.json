@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "597084723574",
+    "firebase_url": "https://meetapp-33e04.firebaseio.com",
+    "project_id": "meetapp-33e04",
+    "storage_bucket": "meetapp-33e04.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:597084723574:android:9cbdb21ae527af21854257",
+        "android_client_info": {
+          "package_name": "com.team4infinity.meetapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "597084723574-02rkjcp8ve5flsmgl3pic1ktubi1gqdo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIouGV7hddgkbq28PBnzbjKzx9rVRj_Rg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "597084723574-02rkjcp8ve5flsmgl3pic1ktubi1gqdo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
