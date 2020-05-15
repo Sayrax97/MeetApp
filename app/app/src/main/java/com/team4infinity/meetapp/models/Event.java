@@ -15,5 +15,5 @@ public class Event {
     public int maxOccupancy;
     public ArrayList<String> galleryURIs;
     public ArrayList<String> attendeesID;
-    public ArrayList<Integer> categoriesID;
+    public int categoriesID;
 }

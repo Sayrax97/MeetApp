@@ -6,6 +6,7 @@
     <string name="last_name">Last Name</string>
     <string name="title">Title</string>
     <string name="login">Login</string>
+    <string name="ok">OK</string>
     <string name="forgot_password">Forgot password</string>
     <string name="no_account">Need an account? Create one</string>
     <string name="confirm_password">Confirm password</string>
@@ -24,7 +25,10 @@
     <string name="profile">Profile</string>
     <string name="event_page">Event page</string>
     <string name="create_event">Create Event</string>
-    <string name="date_time">Date and time</string>
+    <string name="date">Date</string>
+    <string name="date1">Date(YYYY/MM/DD)</string>
+    <string name="time">Time</string>
+    <string name="time1">Time(HH:MM)</string>
     <string name="address">Address</string>
     <string name="description">Description</string>
     <string name="price">Price</string>
@@ -34,6 +38,7 @@
     <string name="sort">Sort by</string>
     <string name="name">Name</string>
     <string name="distance">Distance</string>
+    <string name="max_occupancy">Max occupancy</string>
     <string name="occupancy">Occupancy</string>
     <string name="rating">Rating</string>
     <string name="created_events">Created Events</string>
