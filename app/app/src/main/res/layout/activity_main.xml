@@ -11,8 +11,27 @@
         android:id="@+id/map"
         tilesource="Mapnik"
         >
-
     </org.osmdroid.views.MapView>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/searchView"
+        app:layout_constraintVertical_bias="0.0">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/categories_chip_group"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintVertical_bias="0.0">
+
+
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
     <Button
         android:id="@+id/btn"
         android:layout_width="wrap_content"
@@ -25,6 +44,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <SearchView
+        android:id="@+id/searchView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/colorBack"
@@ -38,6 +58,7 @@
         android:layout_marginBottom="81dp"
         android:backgroundTint="@color/colorBackWhite"
         android:elevation="10dp"
+        app:tint="@null"
         android:src="@drawable/plus_blue"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -52,6 +73,7 @@
         android:backgroundTint="@color/colorBackWhite"
         android:src="@drawable/pointer"
         app:layout_anchorGravity="top"
+        app:tint="@null"
         app:layout_constraintBottom_toTopOf="@+id/fab_add"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.95"
@@ -61,6 +83,7 @@
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:layout_width="match_parent"
+        android:id="@+id/bottom_nav_map"
         android:layout_height="wrap_content"
         android:background="@color/colorBackWhite"
         app:menu="@menu/nav_bar"
