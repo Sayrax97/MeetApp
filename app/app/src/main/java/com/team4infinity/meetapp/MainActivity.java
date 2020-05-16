@@ -11,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -20,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.res.ResourcesCompat;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipDrawable;
 import com.google.android.material.chip.ChipGroup;
@@ -39,6 +41,7 @@ import java.util.ArrayList;
 public class MainActivity extends Activity {
 
     private static final int PERMISSION_ACCESS_FINE_LOCATION = 1;
+    private static final int PERMISSION_WRITE_EXTERNAL_STORAGE = 2;
     private FirebaseAuth auth;
     private Context that=this;
     private MapView map=null;
@@ -47,12 +50,27 @@ public class MainActivity extends Activity {
     private ArrayList<String> cat;
     private ChipGroup chipGroup;
     private FloatingActionButton fabPointer,fabAdd;
+    private BottomNavigationView bottomNav;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         auth=FirebaseAuth.getInstance();
         Button btn=findViewById(R.id.btn);
+        bottomNav=findViewById(R.id.bottom_nav_bar);
+        bottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()){
+                    case R.id.nb_profile:{
+                        Intent intent=new Intent(that,ProfileActivity.class);
+                        that.startActivity(intent);
+                        break;
+                    }
+                }
+                return true;
+            }
+        });
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -64,6 +82,9 @@ public class MainActivity extends Activity {
         Configuration.getInstance().load(getApplicationContext(), PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         map = findViewById(R.id.map);
         map.setMultiTouchControls(true);
+        if(ActivityCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE)!=PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},PERMISSION_WRITE_EXTERNAL_STORAGE);
+        }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
         {
@@ -132,6 +153,13 @@ public class MainActivity extends Activity {
                 }
                 return;
             }
+            case PERMISSION_WRITE_EXTERNAL_STORAGE:{
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                }else {
+                    finish();
+                }
+            }
         }
     }
     void Addcat(){
@@ -142,13 +170,13 @@ public class MainActivity extends Activity {
         cat.add("seminar");
         cat.add("sport");
         for (String s:cat) {
-            Chip chip=(Chip) this.getLayoutInflater().inflate(R.layout.item_chip_layout,null,false);
+            final Chip chip=(Chip) this.getLayoutInflater().inflate(R.layout.item_chip_layout,null,false);
             chip.setText(s);
-            chip.setChipIcon(getDrawable(R.drawable.baseline_email_black_48));
-            chip.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            chip.setChipIcon(getDrawable(R.drawable.birthday));
+            chip.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    Toast.makeText(that, ""+buttonView.getText()+" Clicked", Toast.LENGTH_SHORT).show();
+                public void onClick(View v) {
+                    Toast.makeText(that, ""+chip.getText()+" Clicked", Toast.LENGTH_SHORT).show();
                 }
             });
             chipGroup.addView(chip);

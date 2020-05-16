@@ -14,7 +14,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".CreateEventActivity"></activity>
+        <activity
+            android:name=".ProfileActivity" />
+        <activity android:name=".CreateEventActivity" />
         <activity
             android:name=".CreateAccountActivity"
             android:theme="@style/AppThemeNoBar" />
@@ -27,8 +29,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity" android:theme="@style/AppThemeMatNoBar">
-        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:theme="@style/AppThemeMatNoBar" />
     </application>
 
 </manifest>
