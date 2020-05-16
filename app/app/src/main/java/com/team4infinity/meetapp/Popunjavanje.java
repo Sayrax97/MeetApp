@@ -8,13 +8,13 @@ import android.widget.Button;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.team4infinity.meetapp.models.Category;
+import com.team4infinity.meetapp.models.CategoryList;
 
 import java.util.ArrayList;
 
 public class Popunjavanje extends AppCompatActivity {
 
-    ArrayList<Category> categories;
+    ArrayList<CategoryList> categories;
     private DatabaseReference database;
     public static final String FIREBASE_CHILD="categories";
     private static final String TAG = "team4infinty.com";
@@ -24,29 +24,24 @@ public class Popunjavanje extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_popunjavanje);
         database= FirebaseDatabase.getInstance().getReference();
-        categories=new ArrayList<Category>();
-        final Category c1=new Category();
-        c1.name="Zurka";
-        final Category c2=new Category();
-        c2.name="Film";
-        final Category c3=new Category();
-        c3.name="Sportsko";
+        categories=new ArrayList<CategoryList>();
+        final CategoryList c1=new CategoryList();
+        c1.categories=new ArrayList<String>();
+        c1.categories.add("Sport");
+        c1.categories.add("Movie");
+        c1.categories.add("Birthday");
 
         Button btn =findViewById(R.id.buttonPop);
            btn.setOnClickListener(new View.OnClickListener() {
                @Override
                public void onClick(View v) {
-                   ArrayList<Category> ct=new ArrayList<Category>();
-                   ct.add(c1);
-                   ct.add(c2);
-                   ct.add(c3);
-                   addNewCategory(ct);
+                   addNewCategory(c1);
                }
            });
 
     }
 
-    public void addNewCategory(ArrayList<Category> c){
+    public void addNewCategory(CategoryList c){
         database.child(FIREBASE_CHILD).setValue(c);
     }
 }

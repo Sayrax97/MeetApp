@@ -1,11 +1,8 @@
 package com.team4infinity.meetapp;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import com.team4infinity.meetapp.models.Category;
-import com.team4infinity.meetapp.models.Event;
-import com.google.firebase.database.ChildEventListener;
+import com.team4infinity.meetapp.models.CategoryList;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -18,7 +15,7 @@ import java.util.HashMap;
 
 
 public class Categories {
-    ArrayList<Category> categories;
+    ArrayList<CategoryList> categories;
     private HashMap<String,Integer> categoriesKeyIndexMapping;
     private DatabaseReference database;
     public static final String FIREBASE_CHILD="categories";
@@ -26,7 +23,7 @@ public class Categories {
 
 
     public Categories() {
-        categories=new ArrayList<Category>();
+        categories=new ArrayList<CategoryList>();
         categoriesKeyIndexMapping= new HashMap<String, Integer>();
         database= FirebaseDatabase.getInstance().getReference();
 
@@ -34,7 +31,7 @@ public class Categories {
         database.child(FIREBASE_CHILD).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                categories= (ArrayList<Category>) dataSnapshot.getValue();
+                categories= (ArrayList<CategoryList>) dataSnapshot.getValue();
             }
 
             @Override
@@ -53,11 +50,11 @@ public class Categories {
         return ChamberOfSecrets.instance;
     }
 
-    public ArrayList<Category> getCategories() {
+    public ArrayList<CategoryList> getCategories() {
         return categories;
     }
 
-    public void addNewCategory(Category c){
+    public void addNewCategory(CategoryList c){
         String key=database.push().getKey();
         database.child(FIREBASE_CHILD).child(key).setValue(c);
     }

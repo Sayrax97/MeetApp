@@ -15,66 +15,101 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.team4infinity.meetapp.models.Category;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.team4infinity.meetapp.models.CategoryList;
+import com.team4infinity.meetapp.models.Cities;
 import com.team4infinity.meetapp.models.Event;
 
 import org.osmdroid.util.GeoPoint;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class CreateEventActivity extends AppCompatActivity {
+    private static final String FIREBASE_CHILD_CAT = "categories";
+    private static final String FIREBASE_CHILD_CIT = "cities";
     EditText title;
     EditText date;
     EditText time;
     EditText address;
     EditText description;
     EditText price;
-    RadioGroup category;
+    RadioGroup categoryRB;
     EditText specialReq;
     EditText maxOccupancy;
-    Spinner city;
-
+    Spinner citySpinner;
+    Spinner categoriesSpinner;
+    DatabaseReference database;
     Event event;
-
-    ArrayList<String> cities;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_event);
 
-        cities=new ArrayList<String>();
-        cities.add("Nis");
-        cities.add("Beograd");
-        cities.add("Novi Sad");
-
+        database= FirebaseDatabase.getInstance().getReference();
         title=findViewById(R.id.TitleCE);
         date=findViewById(R.id.DateCE);
         time=findViewById(R.id.TimeCE);
         address=findViewById(R.id.AddressCE);
         description=findViewById(R.id.DescriptionCE);
         price=findViewById(R.id.PriceCE);
-        category=findViewById(R.id.RGCategoryCE);
+        categoryRB =findViewById(R.id.RGCategoryCE);
         specialReq=findViewById(R.id.SpecialReqCE);
         maxOccupancy=findViewById(R.id.OccupancyCE);
-        city=findViewById(R.id.CityCE);
+        citySpinner =findViewById(R.id.CityCE);
+        categoriesSpinner =findViewById(R.id.spinnerCat);
+        database.child(FIREBASE_CHILD_CAT).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                CategoryList cl= dataSnapshot.getValue(CategoryList.class);
+//                int br= 0;
+//                for (String cat:cl.categories) {
+////                    RadioButton rb=new RadioButton(CreateEventActivity.this);
+////                    rb.setId(br);
+////                    br++;
+////                    rb.setText(cat);
+////                    categoryRB.addView(rb);
+//                    categoriesSpinner.
+//                }
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(CreateEventActivity.this,
+                        android.R.layout.simple_spinner_item, cl.categories);
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                categoriesSpinner.setAdapter(adapter);
+            }
 
-        int br=0;
-        for (Category c:Categories.getInstance().getCategories()) {
-            RadioButton rb=new RadioButton(this);
-            rb.setId(br);
-            br++;
-            rb.setText(c.name);
-            category.addView(rb);
-        }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_spinner_item, cities);
-        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        city.setAdapter(dataAdapter);
-        city.setSelection(0);
+            }
+        });
+//        for (CategoryList c:Categories.getInstance().getCategories()) {
+//            RadioButton rb=new RadioButton(this);
+//            rb.setId(br);
+//            br++;
+//            rb.setText(c.name);
+//            category.addView(rb);
+//        }
+        database.child(FIREBASE_CHILD_CIT).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Cities cities=dataSnapshot.getValue(Cities.class);
+                ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(CreateEventActivity.this,
+                        android.R.layout.simple_spinner_item, cities.cities);
+                dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                citySpinner.setAdapter(dataAdapter);
+                citySpinner.setSelection(0);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
 
         event=new Event();
     }
@@ -126,7 +161,7 @@ public class CreateEventActivity extends AppCompatActivity {
                 }
                 GeoPoint gp;
                 try {
-                    gp=getLocationFromAddress(address.getText().toString()+", "+city.getSelectedItem());
+                    gp=getLocationFromAddress(address.getText().toString()+", "+ citySpinner.getSelectedItem());
                 } catch (IOException e) {
                     e.printStackTrace();
                     break;
@@ -141,7 +176,7 @@ public class CreateEventActivity extends AppCompatActivity {
                 event.description=description.getText().toString();
                 event.specialRequirement=specialReq.getText().toString();
                 event.rating=0;
-                int selectedId=category.getCheckedRadioButtonId();
+                int selectedId= categoryRB.getCheckedRadioButtonId();
                 RadioButton categoryRB=findViewById(selectedId);
                 event.categoriesID=categoryRB.getId();
                 event.attendeesID=null;
@@ -151,7 +186,7 @@ public class CreateEventActivity extends AppCompatActivity {
 
         }
 
-        return onOptionsItemSelected(item);
+        return true;
     }
 
     public GeoPoint getLocationFromAddress(String strAddress) throws IOException {

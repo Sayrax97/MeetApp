@@ -75,6 +75,7 @@ public class CreateAccountActivity extends Activity {
         btnCreateAccount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //region IF-ELSE Checks
                 if(firstName.getText().toString().isEmpty()){
 
                     firstName.setError("First Name is empty");
@@ -100,6 +101,7 @@ public class CreateAccountActivity extends Activity {
                     date.setError("Date is empty");
                     return;
                 }
+                //endregion
                 
                 user=new User();
                 user.firstName=firstName.getText().toString();
@@ -128,7 +130,6 @@ public class CreateAccountActivity extends Activity {
                         if(task.isSuccessful()){
                             FirebaseUser currentUser=auth.getCurrentUser();
                             database.child(USER_CHILD).child(currentUser.getUid()).setValue(user);
-                            if (imageUri!=null)
                                 uploadImage();
                             Toast.makeText(CreateAccountActivity.this, "User Created", Toast.LENGTH_SHORT).show();
                             Intent i=new Intent(that,MainActivity.class);
