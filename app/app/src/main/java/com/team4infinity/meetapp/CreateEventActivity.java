@@ -8,9 +8,11 @@ import android.location.Geocoder;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.team4infinity.meetapp.models.Category;
@@ -19,6 +21,7 @@ import com.team4infinity.meetapp.models.Event;
 import org.osmdroid.util.GeoPoint;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CreateEventActivity extends AppCompatActivity {
@@ -31,13 +34,21 @@ public class CreateEventActivity extends AppCompatActivity {
     RadioGroup category;
     EditText specialReq;
     EditText maxOccupancy;
+    Spinner city;
 
     Event event;
+
+    ArrayList<String> cities;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_event);
+
+        cities=new ArrayList<String>();
+        cities.add("Nis");
+        cities.add("Beograd");
+        cities.add("Novi Sad");
 
         title=findViewById(R.id.TitleCE);
         date=findViewById(R.id.DateCE);
@@ -48,6 +59,7 @@ public class CreateEventActivity extends AppCompatActivity {
         category=findViewById(R.id.RGCategoryCE);
         specialReq=findViewById(R.id.SpecialReqCE);
         maxOccupancy=findViewById(R.id.OccupancyCE);
+        city=findViewById(R.id.CityCE);
 
         int br=0;
         for (Category c:Categories.getInstance().getCategories()) {
@@ -57,6 +69,12 @@ public class CreateEventActivity extends AppCompatActivity {
             rb.setText(c.name);
             category.addView(rb);
         }
+
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_spinner_item, cities);
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        city.setAdapter(dataAdapter);
+        city.setSelection(0);
 
         event=new Event();
     }
@@ -108,7 +126,7 @@ public class CreateEventActivity extends AppCompatActivity {
                 }
                 GeoPoint gp;
                 try {
-                    gp=getLocationFromAddress(address.getText().toString());
+                    gp=getLocationFromAddress(address.getText().toString()+", "+city.getSelectedItem());
                 } catch (IOException e) {
                     e.printStackTrace();
                     break;
@@ -128,7 +146,7 @@ public class CreateEventActivity extends AppCompatActivity {
                 event.categoriesID=categoryRB.getId();
                 event.attendeesID=null;
                 Toast.makeText(this, event.lon+" "+event.lat, Toast.LENGTH_SHORT).show();
-
+                break;
             }
 
         }
@@ -151,8 +169,8 @@ public class CreateEventActivity extends AppCompatActivity {
             location.getLatitude();
             location.getLongitude();
 
-            p1 = new GeoPoint((double) (location.getLatitude() * 1E6),
-                    (double) (location.getLongitude() * 1E6));
+            p1 = new GeoPoint((double) (location.getLatitude()),
+                    (double) (location.getLongitude()));
 
             return p1;
         } catch (IOException e) {

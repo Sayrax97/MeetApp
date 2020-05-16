@@ -112,7 +112,7 @@ public class MainActivity extends Activity {
         fabAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(that, "FAB + Clicked", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this,CreateEventActivity.class));
             }
         });
     }
