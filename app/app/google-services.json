@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "597084723574-nhaqo0vfer2649mp747e26aafg6jnbk6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.team4infinity.meetapp",
+            "certificate_hash": "81146f5f5dbcc0e948be9be25a501dd781eeb0d1"
+          }
+        },
+        {
           "client_id": "597084723574-02rkjcp8ve5flsmgl3pic1ktubi1gqdo.apps.googleusercontent.com",
           "client_type": 3
         }

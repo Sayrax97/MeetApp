@@ -30,6 +30,7 @@
     <string name="time">Time</string>
     <string name="time1">Time(HH:MM)</string>
     <string name="address">Address</string>
+    <string name="city">City</string>
     <string name="description">Description</string>
     <string name="price">Price</string>
     <string name="category">Category</string>
