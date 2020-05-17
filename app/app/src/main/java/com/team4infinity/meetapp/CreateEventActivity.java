@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CreateEventActivity extends AppCompatActivity {
+    //region Members
     private static final String FIREBASE_CHILD_CAT = "categories";
     private static final String FIREBASE_CHILD_CIT = "cities";
     EditText title;
@@ -44,13 +45,17 @@ public class CreateEventActivity extends AppCompatActivity {
     MaterialSpinner categoriesSpinner;
     DatabaseReference database;
     Event event;
+    //endregion
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //region Inits
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_event);
-
+        if (getSupportActionBar()!=null){
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
         database= FirebaseDatabase.getInstance().getReference();
         title=findViewById(R.id.TitleCE);
         date=findViewById(R.id.DateCE);
@@ -202,7 +207,10 @@ public class CreateEventActivity extends AppCompatActivity {
                 Toast.makeText(this, event.lon+" "+event.lat, Toast.LENGTH_SHORT).show();
                 break;
             }
-
+            case android.R.id.home:{
+                finish();
+                break;
+                }
         }
 
         return true;

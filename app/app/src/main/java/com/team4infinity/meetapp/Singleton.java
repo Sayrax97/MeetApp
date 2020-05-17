@@ -61,6 +61,7 @@ public class Singleton {
     private static class ChamberOfSecrets{
         public static final Singleton instance= new Singleton();
     }
+
     public static Singleton getInstance() {
         return ChamberOfSecrets.instance;
     }
