@@ -36,6 +36,7 @@ public class ProfileActivity extends AppCompatActivity {
     DatabaseReference database;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //region Init
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
         if (getSupportActionBar()!=null){
@@ -49,6 +50,8 @@ public class ProfileActivity extends AppCompatActivity {
         date=findViewById(R.id.profile_date_of_birth);
         user=FirebaseAuth.getInstance().getCurrentUser();
         storage=FirebaseStorage.getInstance().getReference();
+        //endregion
+
         storage.child("users").child(user.getUid()).child("profile").getBytes(5*ONE_MEGABYTE).addOnCompleteListener(new OnCompleteListener<byte[]>() {
             @Override
             public void onComplete(@NonNull Task<byte[]> task) {

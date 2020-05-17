@@ -10,9 +10,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
@@ -20,6 +18,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.jaredrummler.materialspinner.MaterialSpinner;
 import com.team4infinity.meetapp.models.CategoryList;
 import com.team4infinity.meetapp.models.Cities;
 import com.team4infinity.meetapp.models.Event;
@@ -27,6 +26,7 @@ import com.team4infinity.meetapp.models.Event;
 import org.osmdroid.util.GeoPoint;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CreateEventActivity extends AppCompatActivity {
@@ -38,16 +38,16 @@ public class CreateEventActivity extends AppCompatActivity {
     EditText address;
     EditText description;
     EditText price;
-    RadioGroup categoryRB;
     EditText specialReq;
     EditText maxOccupancy;
-    Spinner citySpinner;
-    Spinner categoriesSpinner;
+    MaterialSpinner citySpinner;
+    MaterialSpinner categoriesSpinner;
     DatabaseReference database;
     Event event;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //region Inits
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_event);
 
@@ -58,51 +58,62 @@ public class CreateEventActivity extends AppCompatActivity {
         address=findViewById(R.id.AddressCE);
         description=findViewById(R.id.DescriptionCE);
         price=findViewById(R.id.PriceCE);
-        categoryRB =findViewById(R.id.RGCategoryCE);
         specialReq=findViewById(R.id.SpecialReqCE);
         maxOccupancy=findViewById(R.id.OccupancyCE);
         citySpinner =findViewById(R.id.CityCE);
         categoriesSpinner =findViewById(R.id.spinnerCat);
-        database.child(FIREBASE_CHILD_CAT).addValueEventListener(new ValueEventListener() {
+        //endregion
+
+        //region GET CATEGORIES
+        if (getCategories().isEmpty())
+        {
+            database.child(FIREBASE_CHILD_CAT).addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Singleton.getInstance().categories= dataSnapshot.getValue(CategoryList.class);
+    //                int br= 0;
+    //                for (String cat:cl.categories) {
+    ////                    RadioButton rb=new RadioButton(CreateEventActivity.this);
+    ////                    rb.setId(br);
+    ////                    br++;
+    ////                    rb.setText(cat);
+    ////                    categoryRB.addView(rb);
+    //                    categoriesSpinner.
+    //                }
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(CreateEventActivity.this,
+                            android.R.layout.simple_spinner_item, getCategories());
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    adapter.notifyDataSetChanged();
+                    categoriesSpinner.setAdapter(adapter);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+        }
+        else {
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(CreateEventActivity.this,
+                    android.R.layout.simple_spinner_item, getCategories());
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            adapter.notifyDataSetChanged();
+            categoriesSpinner.setAdapter(adapter);
+        }
+        //endregion
+
+        //region GET CITIES
+        if(getCities().isEmpty())
+        {
+            database.child(FIREBASE_CHILD_CIT).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                CategoryList cl= dataSnapshot.getValue(CategoryList.class);
-//                int br= 0;
-//                for (String cat:cl.categories) {
-////                    RadioButton rb=new RadioButton(CreateEventActivity.this);
-////                    rb.setId(br);
-////                    br++;
-////                    rb.setText(cat);
-////                    categoryRB.addView(rb);
-//                    categoriesSpinner.
-//                }
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(CreateEventActivity.this,
-                        android.R.layout.simple_spinner_item, cl.categories);
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                categoriesSpinner.setAdapter(adapter);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-//        for (CategoryList c:Categories.getInstance().getCategories()) {
-//            RadioButton rb=new RadioButton(this);
-//            rb.setId(br);
-//            br++;
-//            rb.setText(c.name);
-//            category.addView(rb);
-//        }
-        database.child(FIREBASE_CHILD_CIT).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Cities cities=dataSnapshot.getValue(Cities.class);
-                ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(CreateEventActivity.this,
-                        android.R.layout.simple_spinner_item, cities.cities);
+                Singleton.getInstance().cities=dataSnapshot.getValue(Cities.class);
+                ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(CreateEventActivity.this,
+                        android.R.layout.simple_spinner_item, getCities());
                 dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                dataAdapter.notifyDataSetChanged();
                 citySpinner.setAdapter(dataAdapter);
-                citySpinner.setSelection(0);
             }
 
             @Override
@@ -110,6 +121,15 @@ public class CreateEventActivity extends AppCompatActivity {
 
             }
         });
+        }
+        else {
+            ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(CreateEventActivity.this,
+                    android.R.layout.simple_spinner_item, getCities());
+            dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            dataAdapter.notifyDataSetChanged();
+            citySpinner.setAdapter(dataAdapter);
+        }
+        //endregion
 
         event=new Event();
     }
@@ -126,6 +146,7 @@ public class CreateEventActivity extends AppCompatActivity {
 
         switch (id){
             case R.id.okMenu:{
+                //region If-ELSE
                 if(title.getText().toString().isEmpty()){
 
                     title.setError("Title is empty");
@@ -159,9 +180,10 @@ public class CreateEventActivity extends AppCompatActivity {
                     price.setError("Price is empty");
                     break;
                 }
+                //endregion
                 GeoPoint gp;
                 try {
-                    gp=getLocationFromAddress(address.getText().toString()+", "+ citySpinner.getSelectedItem());
+                    gp=getLocationFromAddress(address.getText().toString()+", "+ getCities().get(citySpinner.getSelectedIndex()));
                 } catch (IOException e) {
                     e.printStackTrace();
                     break;
@@ -176,10 +198,7 @@ public class CreateEventActivity extends AppCompatActivity {
                 event.description=description.getText().toString();
                 event.specialRequirement=specialReq.getText().toString();
                 event.rating=0;
-                int selectedId= categoryRB.getCheckedRadioButtonId();
-                RadioButton categoryRB=findViewById(selectedId);
-                event.categoriesID=categoryRB.getId();
-                event.attendeesID=null;
+                event.category =getCategories().get(categoriesSpinner.getSelectedIndex());
                 Toast.makeText(this, event.lon+" "+event.lat, Toast.LENGTH_SHORT).show();
                 break;
             }
@@ -193,7 +212,7 @@ public class CreateEventActivity extends AppCompatActivity {
 
         Geocoder coder = new Geocoder(this);
         List<Address> address;
-        GeoPoint p1 = null;
+        GeoPoint p1;
 
         try {
             address = coder.getFromLocationName(strAddress,5);
@@ -212,5 +231,11 @@ public class CreateEventActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return null;
+    }
+    private ArrayList<String> getCategories(){
+        return Singleton.getInstance().getCategories();
+    }
+    private ArrayList<String> getCities(){
+        return Singleton.getInstance().getCities();
     }
 }

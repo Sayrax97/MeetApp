@@ -52,6 +52,7 @@ public class CreateAccountActivity extends Activity {
     User user;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //region Init
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_account);
         auth=FirebaseAuth.getInstance();
@@ -72,6 +73,8 @@ public class CreateAccountActivity extends Activity {
             }
         });
         Button btnCreateAccount=findViewById(R.id.CreateAccount);
+        //endregion
+
         btnCreateAccount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -102,7 +105,8 @@ public class CreateAccountActivity extends Activity {
                     return;
                 }
                 //endregion
-                
+
+                //region User init with data
                 user=new User();
                 user.firstName=firstName.getText().toString();
                 user.lastName=lastName.getText().toString();
@@ -123,14 +127,16 @@ public class CreateAccountActivity extends Activity {
                 user.createdEventsID=new ArrayList<>();
                 user.ratedEventsID=new ArrayList<>();
                 user.visitedEventsID=new ArrayList<>();
+                //endregion
 
+                //region CreateUserWithEmailAndPassword
                 auth.createUserWithEmailAndPassword(user.email,user.password).addOnCompleteListener(CreateAccountActivity.this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if(task.isSuccessful()){
                             FirebaseUser currentUser=auth.getCurrentUser();
                             database.child(USER_CHILD).child(currentUser.getUid()).setValue(user);
-                                uploadImage();
+                            uploadImage();
                             Toast.makeText(CreateAccountActivity.this, "User Created", Toast.LENGTH_SHORT).show();
                             Intent i=new Intent(that,MainActivity.class);
                             that.startActivity(i);
@@ -140,6 +146,7 @@ public class CreateAccountActivity extends Activity {
                         }
                     }
                 });
+                //endregion
 
             }
         });
@@ -172,6 +179,6 @@ public class CreateAccountActivity extends Activity {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] data = baos.toByteArray();
         storage.child(USER_CHILD).child(currentUser.getUid()).child("profile").putBytes(data);
-//        storage.child(USER_CHILD).child(currentUser.getUid()).putFile(imageUri);
+//        storage.child(USER_CHILD).child(currentUser.getUid()).child("profile").putFile(imageUri);
     }
 }
