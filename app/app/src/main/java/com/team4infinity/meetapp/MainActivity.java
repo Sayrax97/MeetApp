@@ -31,8 +31,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import org.json.JSONObject;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
+import org.osmdroid.events.MapEvent;
+import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.MapEventsOverlay;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
@@ -112,9 +115,32 @@ public class MainActivity extends Activity {
         fabAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this,CreateEventActivity.class));
+                startActivityForResult(new Intent(MainActivity.this,CreateEventActivity.class),1);
             }
         });
+
+        //region LongPressMap
+        MapEventsReceiver mapEventsReceiver=new MapEventsReceiver() {
+            @Override
+            public boolean singleTapConfirmedHelper(GeoPoint p) {
+                return false;
+            }
+
+            @Override
+            public boolean longPressHelper(GeoPoint p) {
+                Double lon = (p.getLongitude());
+                Double lat = (p.getLatitude());
+                Intent locationIntent = new Intent(MainActivity.this,CreateEventActivity.class);
+                locationIntent.putExtra("lon", lon);
+                locationIntent.putExtra("lat", lat);
+                startActivityForResult(locationIntent,1);
+
+                return false;
+            }
+        };
+        MapEventsOverlay OverlayEvents = new MapEventsOverlay(mapEventsReceiver);
+        map.getOverlays().add(OverlayEvents);
+        //endregion
     }
 
     @Override
