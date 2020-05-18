@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -17,6 +18,7 @@ import android.widget.CompoundButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -26,6 +28,7 @@ import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -34,13 +37,18 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.team4infinity.meetapp.models.CategoryList;
+import com.team4infinity.meetapp.models.Event;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.MapEventsOverlay;
+import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
@@ -53,6 +61,7 @@ public class MainActivity extends Activity {
     private static final int PERMISSION_WRITE_EXTERNAL_STORAGE = 2;
     private static final String FIREBASE_CHILD_CAT = "categories";
     public static final long ONE_MEGA_BYTE=1024*1024;
+    private static final String TAG ="MainActivity";
     private FirebaseAuth auth;
     private Context that=this;
     private MapView map=null;
@@ -63,6 +72,7 @@ public class MainActivity extends Activity {
     private BottomNavigationView bottomNav;
     private DatabaseReference database;
     private StorageReference storage;
+    private ItemizedIconOverlay eventsOverlay;
     //endregion
 
     @Override
@@ -154,6 +164,8 @@ public class MainActivity extends Activity {
         MapEventsOverlay OverlayEvents = new MapEventsOverlay(mapEventsReceiver);
         map.getOverlays().add(OverlayEvents);
         //endregion
+
+        showEvents();
     }
 
     //region Resume/Pause
@@ -278,6 +290,88 @@ public class MainActivity extends Activity {
 
     private ArrayList<String> getCategories(){
         return Singleton.getInstance().getCategories();
+    }
+    private void showEvents() {
+        final ArrayList<OverlayItem> items = new ArrayList<>();
+        if ( eventsOverlay!= null) {
+            this.map.getOverlays().remove(eventsOverlay);
+        }
+        if (getEvents().isEmpty())
+        {
+        database.child("events").addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Event e=dataSnapshot.getValue(Event.class);
+                Singleton.getInstance().events.add(e);
+                OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
+                item.setMarker(getResources().getDrawable(R.drawable.see_through_pointer,null));
+                items.add(item);
+                eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+                    @Override
+                    public boolean onItemSingleTapUp(int index, OverlayItem item) {
+                        Toast.makeText(that, ""+item.getTitle(), Toast.LENGTH_SHORT).show();
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onItemLongPress(int index, OverlayItem item) {
+//                Intent i = new Intent(MyPlacesMapsActivity.this, ViewMyPlaceActivity.class);
+//                i.putExtra("position", index);
+//                startActivityForResult(i, 5);
+                        return true;
+                    }
+                }, getApplicationContext());
+                map.getOverlays().add(eventsOverlay);
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+        }
+
+//        final ArrayList<OverlayItem> e = new ArrayList<>();
+//        for (int i = 0; i < MyPlacesData.getInstance().getMyPlaces().size(); i++) {
+//            MyPlace myPlace = MyPlacesData.getInstance().getMyPlaces().get(i);
+//            OverlayItem item = new OverlayItem(myPlace.getName(), myPlace.getDescription(), new GeoPoint(Double.parseDouble(myPlace.getLatitude()), Double.parseDouble(myPlace.getLongitude())));
+//            item.setMarker(getResources().getDrawable(R.drawable.baseline_beenhere_black_24));
+//            items.add(item);
+//        }
+//        eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+//            @Override
+//            public boolean onItemSingleTapUp(int index, OverlayItem item) {
+//                Toast.makeText(that, ""+item.getTitle(), Toast.LENGTH_SHORT).show();
+//                return true;
+//            }
+//
+//            @Override
+//            public boolean onItemLongPress(int index, OverlayItem item) {
+////                Intent i = new Intent(MyPlacesMapsActivity.this, ViewMyPlaceActivity.class);
+////                i.putExtra("position", index);
+////                startActivityForResult(i, 5);
+//                return true;
+//            }
+//        }, getApplicationContext());
+//        map.getOverlays().add(eventsOverlay);
+    }
+    private ArrayList<Event> getEvents(){
+        return Singleton.getInstance().getEvents();
     }
     //endregion
 }

@@ -13,6 +13,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.team4infinity.meetapp.models.Cities;
+import com.team4infinity.meetapp.models.Event;
 import com.team4infinity.meetapp.models.User;
 
 
@@ -24,17 +25,20 @@ public class Singleton {
     CategoryList categories;
     Cities cities;
     User user;
+    ArrayList<Event> events;
     private FirebaseAuth auth;
     private DatabaseReference database;
     private static final String FIREBASE_CHILD_CAT ="categories";
     private static final String FIREBASE_CHILD_CIT ="cities";
     private static final String FIREBASE_CHILD_USER ="users";
+    private static final String FIREBASE_CHILD_EVENT ="events";
     private static final String TAG = "team4infinty.com";
 
 
     public Singleton() {
         categories=new CategoryList();
         cities=new Cities();
+        events=new ArrayList<>();
         database= FirebaseDatabase.getInstance().getReference();
         auth= FirebaseAuth.getInstance();
 
@@ -73,6 +77,43 @@ public class Singleton {
 
             }
         });
+//        database.child(FIREBASE_CHILD_EVENT).addChildEventListener(new ChildEventListener() {
+//            @Override
+//            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//                events.add(dataSnapshot.getValue(Event.class));
+//            }
+//
+//            @Override
+//            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//
+//            }
+//
+//            @Override
+//            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+//
+//            }
+//
+//            @Override
+//            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+//        database.child(FIREBASE_CHILD_EVENT).addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
 
     }
 
@@ -95,8 +136,11 @@ public class Singleton {
     public User getUser() {
         return user;
     }
-
+    public ArrayList<Event> getEvents(){
+        return events;
+    }
     public void addNewCategory(String category){
         database.child(FIREBASE_CHILD_CAT).child(categories.categories.size()+"").setValue(category);
     }
+
 }
