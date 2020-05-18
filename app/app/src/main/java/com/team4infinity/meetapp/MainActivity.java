@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Toast;
@@ -38,7 +37,6 @@ import com.team4infinity.meetapp.models.CategoryList;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
-import org.osmdroid.events.MapEvent;
 import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -75,7 +73,6 @@ public class MainActivity extends Activity {
         auth=FirebaseAuth.getInstance();
         database= FirebaseDatabase.getInstance().getReference();
         storage= FirebaseStorage.getInstance().getReference();
-        Button btn=findViewById(R.id.btn);
         bottomNav=findViewById(R.id.bottom_nav_bar);
         //region BottomNavBar
         bottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -92,14 +89,6 @@ public class MainActivity extends Activity {
             }
         });
         //endregion
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                auth.signOut();
-                that.startActivity(new Intent(that,LoginActivity.class));
-                finish();
-            }
-        });
         Configuration.getInstance().load(getApplicationContext(), PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         map = findViewById(R.id.map);
         map.setMultiTouchControls(true);
@@ -124,7 +113,7 @@ public class MainActivity extends Activity {
         chipGroup=findViewById(R.id.categories_chip_group);
         //endregion
 
-        addCat();
+        addCategories();
 
         //region FAB-s
         fabPointer=findViewById(R.id.fab_pointer);
@@ -141,6 +130,7 @@ public class MainActivity extends Activity {
                 startActivityForResult(new Intent(MainActivity.this,CreateEventActivity.class),1);
             }
         });
+        //endregion
 
         //region LongPressMap
         MapEventsReceiver mapEventsReceiver=new MapEventsReceiver() {
@@ -216,7 +206,8 @@ public class MainActivity extends Activity {
         }
     }
 
-    void addCat(){
+    //region My Functions
+    private void addCategories(){
         if (getCategories().isEmpty())
         {
             database.child(FIREBASE_CHILD_CAT).addValueEventListener(new ValueEventListener() {
@@ -284,7 +275,9 @@ public class MainActivity extends Activity {
             myLocationNewOverlay.enableFollowLocation();
         }
     }
+
     private ArrayList<String> getCategories(){
         return Singleton.getInstance().getCategories();
     }
+    //endregion
 }

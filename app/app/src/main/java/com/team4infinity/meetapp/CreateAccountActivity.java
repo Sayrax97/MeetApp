@@ -126,7 +126,7 @@ public class CreateAccountActivity extends Activity {
                 user.bookmarkedEventsID =new ArrayList<>();
                 user.createdEventsID=new ArrayList<>();
                 user.ratedEventsID=new ArrayList<>();
-                user.visitedEventsID=new ArrayList<>();
+                user.attendedEventsID =new ArrayList<>();
                 //endregion
 
                 //region CreateUserWithEmailAndPassword

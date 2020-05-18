@@ -101,7 +101,6 @@ public class CreateEventActivity extends AppCompatActivity {
         event=new Event();
         //endregion
 
-
         //region GET CATEGORIES
         if (getCategories().isEmpty())
         {
@@ -210,6 +209,7 @@ public class CreateEventActivity extends AppCompatActivity {
         });
         //endregion
 
+        //region Intent
         Intent intGet= getIntent();
         Bundle bundle=intGet.getExtras();
         if(bundle!=null){
@@ -221,6 +221,7 @@ public class CreateEventActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+        //endregion
 
 
 

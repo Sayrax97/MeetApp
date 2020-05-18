@@ -4,9 +4,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,12 +30,14 @@ import com.team4infinity.meetapp.models.User;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ProfileActivity extends AppCompatActivity {
+    //region Members
     CircleImageView profileImage;
     public static final long ONE_MEGABYTE=1024*1024;
-    TextView fullName,email,gender,date;
-    FirebaseUser user;
+    TextView fullName,email,gender,date,createdEvents,ratedEvents,attendedEvents;
     StorageReference storage;
     DatabaseReference database;
+    FirebaseAuth auth;
+    //endregion
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //region Init
@@ -48,11 +52,19 @@ public class ProfileActivity extends AppCompatActivity {
         email=findViewById(R.id.profile_email);
         gender=findViewById(R.id.profile_gender);
         date=findViewById(R.id.profile_date_of_birth);
-        user=FirebaseAuth.getInstance().getCurrentUser();
+        createdEvents=findViewById(R.id.profile_created_events);
+        ratedEvents=findViewById(R.id.profile_rated_events);
+        attendedEvents=findViewById(R.id.profile_attended_events);
+        createdEvents.setText(String.valueOf(getUser().createdEventsID.size()));
+        ratedEvents.setText(String.valueOf(getUser().ratedEventsID.size()));
+        attendedEvents.setText(String.valueOf(getUser().attendedEventsID.size()));
         storage=FirebaseStorage.getInstance().getReference();
+        database=FirebaseDatabase.getInstance().getReference();
+        auth=FirebaseAuth.getInstance();
         //endregion
 
-        storage.child("users").child(user.getUid()).child("profile").getBytes(5*ONE_MEGABYTE).addOnCompleteListener(new OnCompleteListener<byte[]>() {
+        //region Storage
+        storage.child("users").child(getUser().uID).child("profile").getBytes(5*ONE_MEGABYTE).addOnCompleteListener(new OnCompleteListener<byte[]>() {
             @Override
             public void onComplete(@NonNull Task<byte[]> task) {
                 byte[] data = task.getResult();
@@ -62,8 +74,10 @@ public class ProfileActivity extends AppCompatActivity {
                         profileImage.getHeight(), false));
             }
         });
-        database=FirebaseDatabase.getInstance().getReference();
-        database.child("users").child(user.getUid()).addValueEventListener(new ValueEventListener() {
+        //endregion
+
+        //region Database
+        database.child("users").child(getUser().uID).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 User user_data=dataSnapshot.getValue(User.class);
@@ -78,6 +92,13 @@ public class ProfileActivity extends AppCompatActivity {
 
             }
         });
+        //endregion
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.profile_menu,menu);
+        return true;
     }
 
     @Override
@@ -85,6 +106,16 @@ public class ProfileActivity extends AppCompatActivity {
         if (item.getItemId()==android.R.id.home){
             finish();
         }
+        else if(item.getItemId()==R.id.logout){
+            auth.signOut();
+            Intent intent=new Intent(this,LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+    private User getUser(){
+        return Singleton.getInstance().getUser();
     }
 }

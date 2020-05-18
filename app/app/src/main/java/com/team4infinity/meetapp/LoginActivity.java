@@ -33,6 +33,7 @@ public class LoginActivity extends Activity {
     private FirebaseAuth auth;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //region Init
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         auth=FirebaseAuth.getInstance();
@@ -41,6 +42,9 @@ public class LoginActivity extends Activity {
         forgotPassTxt=findViewById(R.id.forgotPassTxt);
         noAccTxt=findViewById(R.id.noAccTxt);
         loginBtn=findViewById(R.id.loginBtn);
+        //endregion
+
+        //region LoginBtn Listener
         loginBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -50,6 +54,7 @@ public class LoginActivity extends Activity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()){
                             that.startActivity(new Intent(that,MainActivity.class));
+                            finish();
                         }
                         else {
                             Toast.makeText(that, "Email or password incorrect", Toast.LENGTH_SHORT).show();
@@ -58,7 +63,11 @@ public class LoginActivity extends Activity {
                 });
             }
         });
+        //endregion
+
         loginBtn.setEnabled(false);
+
+        //region TextChange Listeners
         emailEdit.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -101,6 +110,8 @@ public class LoginActivity extends Activity {
 
             }
         });
+        //endregion
+
         noAccTxt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -115,6 +126,7 @@ public class LoginActivity extends Activity {
         FirebaseUser user=auth.getCurrentUser();
         if(user!=null){
             startActivity(new Intent(this,MainActivity.class));
+            finish();
         }
     }
 }

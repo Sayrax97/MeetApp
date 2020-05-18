@@ -60,12 +60,12 @@ public class Singleton {
 
             }
         });
-        FirebaseUser userFB= auth.getCurrentUser();
-        String userID=userFB.getUid();
-        database.child(FIREBASE_CHILD_USER).child(userID).addValueEventListener(new ValueEventListener() {
+        final FirebaseUser currentUser= auth.getCurrentUser();
+        database.child(FIREBASE_CHILD_USER).child(currentUser.getUid()).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 user=dataSnapshot.getValue(User.class);
+                user.uID=currentUser.getUid();
             }
 
             @Override

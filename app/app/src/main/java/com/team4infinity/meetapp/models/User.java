@@ -17,7 +17,7 @@ public class User {
     public String birthDate;
     public ArrayList<String> bookmarkedEventsID=new ArrayList<>();
     public ArrayList<String> ratedEventsID=new ArrayList<>();
-    public ArrayList<String> visitedEventsID=new ArrayList<>();
+    public ArrayList<String> attendedEventsID =new ArrayList<>();
     public ArrayList<String> createdEventsID=new ArrayList<>();
     public String FullName(){
         return firstName+" "+lastName;
