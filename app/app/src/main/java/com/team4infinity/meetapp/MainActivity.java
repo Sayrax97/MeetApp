@@ -10,10 +10,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 
@@ -39,8 +37,6 @@ import com.google.firebase.storage.StorageReference;
 import com.team4infinity.meetapp.models.CategoryList;
 import com.team4infinity.meetapp.models.Event;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.events.MapEventsReceiver;
@@ -84,6 +80,7 @@ public class MainActivity extends Activity {
         database= FirebaseDatabase.getInstance().getReference();
         storage= FirebaseStorage.getInstance().getReference();
         bottomNav=findViewById(R.id.bottom_nav_bar);
+        bottomNav.setSelectedItemId(R.id.nb_map);
         //region BottomNavBar
         bottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -91,6 +88,11 @@ public class MainActivity extends Activity {
                 switch (item.getItemId()){
                     case R.id.nb_profile:{
                         Intent intent=new Intent(that,ProfileActivity.class);
+                        that.startActivity(intent);
+                        break;
+                    }
+                    case R.id.nb_events:{
+                        Intent intent=new Intent(that,EventsActivity.class);
                         that.startActivity(intent);
                         break;
                     }
@@ -172,6 +174,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        bottomNav.setSelectedItemId(R.id.nb_map);
         map.onResume();
     }
 
@@ -298,13 +301,14 @@ public class MainActivity extends Activity {
         }
         if (getEvents().isEmpty())
         {
+            //TODO bug sta ako su ucitani eventi treba ti else
         database.child("events").addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Event e=dataSnapshot.getValue(Event.class);
                 Singleton.getInstance().events.add(e);
                 OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
-                item.setMarker(getResources().getDrawable(R.drawable.see_through_pointer,null));
+                item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
                 items.add(item);
                 eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
                     @Override
