@@ -9,7 +9,6 @@
         android:id="@+id/rv_events_card_view"
         app:cardElevation="10dp"
         app:cardCornerRadius="5dp"
-        app:contentPadding="4dp"
         android:clickable="true"
         android:layout_margin="10dp">
         <LinearLayout
@@ -32,9 +31,9 @@
                     android:layout_alignParentStart="true"
                     android:layout_alignParentEnd="true"
                     android:layout_alignParentBottom="true"
-                    android:layout_marginStart="-1dp"
-                    android:layout_marginEnd="1dp"
-                    android:layout_marginBottom="112dp"
+                    android:layout_marginStart="0dp"
+                    android:layout_marginEnd="0dp"
+                    android:layout_marginBottom="120dp"
                     android:background="@color/colorEventBackText"
                     android:gravity="center"
                     android:text="@string/title"

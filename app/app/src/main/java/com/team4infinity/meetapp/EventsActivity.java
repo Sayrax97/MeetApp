@@ -8,7 +8,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.team4infinity.meetapp.adapters.EventsRecyclerAdapter;
@@ -33,8 +35,9 @@ public class EventsActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         //endregion
-        bottomNav.setSelectedItemId(R.id.nb_events);
+
         //region BottomNavBar
+        bottomNav.setSelectedItemId(R.id.nb_events);
         bottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -45,8 +48,9 @@ public class EventsActivity extends AppCompatActivity {
                         break;
                     }
                     case R.id.nb_map:{
-                        Intent intent=new Intent(that,MainActivity.class);
-                        that.startActivity(intent);
+                        Intent openMainActivity = new Intent(that, MainActivity.class);
+                        openMainActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                        startActivityIfNeeded(openMainActivity, 0);
                         break;
                     }
                 }
@@ -54,11 +58,42 @@ public class EventsActivity extends AppCompatActivity {
             }
         });
         //endregion
+
+        //endregion
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         bottomNav.setSelectedItemId(R.id.nb_events);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.events_menu,menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id=item.getItemId();
+        switch (id){
+            case R.id.filter_events:{
+                Toast.makeText(that, "Filter clicked", Toast.LENGTH_SHORT).show();
+                break;
+            }
+            case R.id.asc_events:{
+                Toast.makeText(that, "AScending clikced", Toast.LENGTH_SHORT).show();
+                break;
+            }
+            case R.id.desc_events:{
+                Toast.makeText(that, "Descending clicked", Toast.LENGTH_SHORT).show();
+                break;
+            }
+            case R.id.sort_by_events:{
+                Toast.makeText(that, "Sort clicked", Toast.LENGTH_SHORT).show();
+                break;
+            }
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
