@@ -2,12 +2,18 @@ package com.team4infinity.meetapp;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ImageSpan;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -68,32 +74,51 @@ public class EventsActivity extends AppCompatActivity {
         bottomNav.setSelectedItemId(R.id.nb_events);
     }
 
+    @SuppressLint("RestrictedApi")
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.events_menu,menu);
+//        getMenuInflater().inflate(R.menu.events_menu,menu);
+        menu.add(0,1,1,menuIconWithText(getResources().getDrawable(R.drawable.settings,null),getResources().getString(R.string.filter)));
+        menu.add(0,2,2,menuIconWithText(getResources().getDrawable(R.drawable.sort,null),getResources().getString(R.string.sort)));
+        menu.add(0,3,3,menuIconWithText(getResources().getDrawable(R.drawable.up_arrow,null),getResources().getString(R.string.asc)));
+        menu.add(0,4,4,menuIconWithText(getResources().getDrawable(R.drawable.arrow_down,null),getResources().getString(R.string.desc)));
+//        getMenuInflater().inflate(R.menu.events_menu,menu);
+//        if(menu instanceof MenuBuilder){
+//            MenuBuilder m = (MenuBuilder) menu;
+//            m.setOptionalIconsVisible(true);
+//        }
         return true;
     }
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id=item.getItemId();
         switch (id){
-            case R.id.filter_events:{
+            case 1:{
                 Toast.makeText(that, "Filter clicked", Toast.LENGTH_SHORT).show();
                 break;
             }
-            case R.id.asc_events:{
-                Toast.makeText(that, "AScending clikced", Toast.LENGTH_SHORT).show();
+            case 3:{
+                Toast.makeText(that, "Ascending clicked", Toast.LENGTH_SHORT).show();
                 break;
             }
-            case R.id.desc_events:{
+            case 4:{
                 Toast.makeText(that, "Descending clicked", Toast.LENGTH_SHORT).show();
                 break;
             }
-            case R.id.sort_by_events:{
+            case 2:{
                 Toast.makeText(that, "Sort clicked", Toast.LENGTH_SHORT).show();
                 break;
             }
         }
         return super.onOptionsItemSelected(item);
+    }
+    private CharSequence menuIconWithText(Drawable r, String title) {
+
+        r.setBounds(0, 0, 50,50);
+        SpannableString sb = new SpannableString("    " + title);
+        ImageSpan imageSpan = new ImageSpan(r, ImageSpan.ALIGN_BOTTOM);
+        sb.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        return sb;
     }
 }
