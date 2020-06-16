@@ -1,6 +1,7 @@
 package com.team4infinity.meetapp;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -10,6 +11,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -21,6 +23,10 @@ import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.team4infinity.meetapp.adapters.EventsRecyclerAdapter;
+import com.team4infinity.meetapp.models.Event;
+
+import java.util.ArrayList;
+import java.util.Comparator;
 
 public class EventsActivity extends AppCompatActivity {
 
@@ -29,7 +35,10 @@ public class EventsActivity extends AppCompatActivity {
     private BottomNavigationView bottomNav;
     private Context that=this;
     private RecyclerView recyclerView;
+
+
     //endregion
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //region Init
@@ -38,9 +47,7 @@ public class EventsActivity extends AppCompatActivity {
         bottomNav=findViewById(R.id.bottom_nav_bar);
         //region Recycler view
         recyclerView=findViewById(R.id.rv_events);
-        EventsRecyclerAdapter adapter=new EventsRecyclerAdapter(this,Singleton.getInstance().events);
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        setRecyclerView(Singleton.getInstance().events);
         //endregion
 
         //region BottomNavBar
@@ -96,19 +103,19 @@ public class EventsActivity extends AppCompatActivity {
 //        }
         return true;
     }
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int id=item.getItemId();
-        switch (id){
-            case 1:{
+        switch (item.getItemId()){
+            case R.id.filter_events:{
                 Toast.makeText(that, "Filter clicked", Toast.LENGTH_SHORT).show();
                 break;
             }
-            case 3:{
+            case R.id.asc_events:{
                 Toast.makeText(that, "Ascending clicked", Toast.LENGTH_SHORT).show();
                 break;
             }
-            case 4:{
+            case R.id.desc_events:{
                 Toast.makeText(that, "Descending clicked", Toast.LENGTH_SHORT).show();
                 break;
             }
@@ -143,5 +150,19 @@ public class EventsActivity extends AppCompatActivity {
         sb.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         return sb;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void setRecyclerView(ArrayList<Event> events){
+        EventsRecyclerAdapter adapter=new EventsRecyclerAdapter(this,events);
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+    }
+
+    public static class EventComparator implements Comparator<Event> {
+        @Override
+        public int compare(Event s, Event t) {
+            return s.title.compareTo(t.title);
+        }
     }
 }
