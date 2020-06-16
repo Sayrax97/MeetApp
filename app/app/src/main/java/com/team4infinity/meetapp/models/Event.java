@@ -32,4 +32,108 @@ public class Event {
         this.price = price;
         this.maxOccupancy = maxOccupancy;
     }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getDateTime() {
+        return dateTime;
+    }
+
+    public void setDateTime(String dateTime) {
+        this.dateTime = dateTime;
+    }
+
+    public String getSpecialRequirement() {
+        return specialRequirement;
+    }
+
+    public void setSpecialRequirement(String specialRequirement) {
+        this.specialRequirement = specialRequirement;
+    }
+
+    public double getLat() {
+        return lat;
+    }
+
+    public void setLat(double lat) {
+        this.lat = lat;
+    }
+
+    public double getLon() {
+        return lon;
+    }
+
+    public void setLon(double lon) {
+        this.lon = lon;
+    }
+
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public int getMaxOccupancy() {
+        return maxOccupancy;
+    }
+
+    public void setMaxOccupancy(int maxOccupancy) {
+        this.maxOccupancy = maxOccupancy;
+    }
+
+    public ArrayList<String> getGalleryURIs() {
+        return galleryURIs;
+    }
+
+    public void setGalleryURIs(ArrayList<String> galleryURIs) {
+        this.galleryURIs = galleryURIs;
+    }
+
+    public ArrayList<String> getAttendeesID() {
+        return attendeesID;
+    }
+
+    public void setAttendeesID(ArrayList<String> attendeesID) {
+        this.attendeesID = attendeesID;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
 }
