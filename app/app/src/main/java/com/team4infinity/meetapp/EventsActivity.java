@@ -16,6 +16,7 @@ import android.text.SpannableString;
 import android.text.style.ImageSpan;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -79,7 +80,13 @@ public class EventsActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
 //        getMenuInflater().inflate(R.menu.events_menu,menu);
         menu.add(0,1,1,menuIconWithText(getResources().getDrawable(R.drawable.settings,null),getResources().getString(R.string.filter)));
-        menu.add(0,2,2,menuIconWithText(getResources().getDrawable(R.drawable.sort,null),getResources().getString(R.string.sort)));
+//        menu.add(0,2,2,menuIconWithText(getResources().getDrawable(R.drawable.sort,null),getResources().getString(R.string.sort)));
+        SubMenu subMenu = menu.addSubMenu(0,2,2,menuIconWithText(getResources().getDrawable(R.drawable.sort,null),getResources().getString(R.string.sort)));
+        subMenu.add(0,11,1,getResources().getString(R.string.name));
+        subMenu.add(0,12,2,getResources().getString(R.string.distance));
+        subMenu.add(0,13,3,getResources().getString(R.string.price));
+        subMenu.add(0,14,4,getResources().getString(R.string.occupancy));
+        subMenu.add(0,15,5,getResources().getString(R.string.rating));
         menu.add(0,3,3,menuIconWithText(getResources().getDrawable(R.drawable.up_arrow,null),getResources().getString(R.string.asc)));
         menu.add(0,4,4,menuIconWithText(getResources().getDrawable(R.drawable.arrow_down,null),getResources().getString(R.string.desc)));
 //        getMenuInflater().inflate(R.menu.events_menu,menu);
@@ -105,8 +112,24 @@ public class EventsActivity extends AppCompatActivity {
                 Toast.makeText(that, "Descending clicked", Toast.LENGTH_SHORT).show();
                 break;
             }
-            case 2:{
-                Toast.makeText(that, "Sort clicked", Toast.LENGTH_SHORT).show();
+            case 11:{
+                Toast.makeText(that, "Name clicked", Toast.LENGTH_SHORT).show();
+                break;
+            }
+            case 12:{
+                Toast.makeText(that, "Distance clicked", Toast.LENGTH_SHORT).show();
+                break;
+            }
+            case 13:{
+                Toast.makeText(that, "Price clicked", Toast.LENGTH_SHORT).show();
+                break;
+            }
+            case 14:{
+                Toast.makeText(that, "Occupancy clicked", Toast.LENGTH_SHORT).show();
+                break;
+            }
+            case 15:{
+                Toast.makeText(that, "Rating clicked", Toast.LENGTH_SHORT).show();
                 break;
             }
         }
