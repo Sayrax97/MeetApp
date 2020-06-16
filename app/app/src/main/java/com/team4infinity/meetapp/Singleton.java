@@ -1,7 +1,10 @@
 package com.team4infinity.meetapp;
 
+import android.os.Build;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -18,6 +21,8 @@ import com.team4infinity.meetapp.models.User;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 
@@ -142,5 +147,6 @@ public class Singleton {
     public void addNewCategory(String category){
         database.child(FIREBASE_CHILD_CAT).child(categories.categories.size()+"").setValue(category);
     }
+
 
 }
