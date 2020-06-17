@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".FilterActivity">
+
+    <LinearLayout
+        android:id="@+id/groupLL"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:tag="all"
+        >
+
+        <TextView
+            android:id="@+id/Distance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/distance" />
+
+        <EditText
+            android:id="@+id/DistanceEditFi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="number" />
+
+        <TextView
+            android:id="@+id/TimeOD"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/time_day" />
+    <LinearLayout
+        android:id="@+id/Time_of_day"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:tag="Time_of_day"
+        >
+        <CheckBox
+            android:id="@+id/MorningCB"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/morning"
+            />
+
+        <CheckBox
+            android:id="@+id/AfternoonCB"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/afternoon"
+            />
+
+        <CheckBox
+            android:id="@+id/EveningCB"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/evening"
+           />
+
+        <CheckBox
+            android:id="@+id/MidnightCB"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/midnight"
+            />
+    </LinearLayout>
+        <TextView
+            android:id="@+id/DayOW"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/day_week" />
+
+    <LinearLayout
+        android:id="@+id/Day_of_week"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:tag="Day_of_week"
+        >
+        <CheckBox
+            android:id="@+id/MondayCB"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/monday"
+            />
+
+        <CheckBox
+            android:id="@+id/TuesdayCB"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/tuesday"
+           />
+
+        <CheckBox
+            android:id="@+id/WednesdayCB"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/wednesday"
+           />
+
+        <CheckBox
+            android:id="@+id/ThursdayCB"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/thursday"
+            />
+
+        <CheckBox
+            android:id="@+id/FridayCB"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/friday"
+            />
+
+        <CheckBox
+            android:id="@+id/SaturdayCB"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/saturday"
+            />
+
+        <CheckBox
+            android:id="@+id/SundayCB"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/sunday"
+            />
+    </LinearLayout>
+        <TextView
+            android:id="@+id/textView21"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/spec_req" />
+
+        <Switch
+            android:id="@+id/SpecialReqSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/yes" />
+
+        <TextView
+            android:id="@+id/textView22"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/price" />
+
+        <Switch
+            android:id="@+id/PriceSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/paid" />
+
+        <TextView
+            android:id="@+id/textView23"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/categories" />
+
+        <LinearLayout
+            android:id="@+id/Categories"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:tag="@string/categories">
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/filterBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Apply Filter" />
+
+    </LinearLayout>
+
+</ScrollView>

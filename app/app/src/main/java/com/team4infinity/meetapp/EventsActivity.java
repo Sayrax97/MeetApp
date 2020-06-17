@@ -107,15 +107,14 @@ public class EventsActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
-            case R.id.filter_events:{
-                Toast.makeText(that, "Filter clicked", Toast.LENGTH_SHORT).show();
-                break;
+            case 1:{
+                startActivity(new Intent(this,FilterActivity.class));
             }
-            case R.id.asc_events:{
+            case 3:{
                 Toast.makeText(that, "Ascending clicked", Toast.LENGTH_SHORT).show();
                 break;
             }
-            case R.id.desc_events:{
+            case 4:{
                 Toast.makeText(that, "Descending clicked", Toast.LENGTH_SHORT).show();
                 break;
             }
