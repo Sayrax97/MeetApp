@@ -4,10 +4,14 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -20,6 +24,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -40,6 +52,7 @@ import com.team4infinity.meetapp.models.Event;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
+import org.osmdroid.events.DelayedMapListener;
 import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.events.MapListener;
 import org.osmdroid.events.ScrollEvent;
@@ -106,6 +119,7 @@ public class MainActivity extends Activity {
         });
         //endregion
         Configuration.getInstance().load(getApplicationContext(), PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
+        //region Map
         map = findViewById(R.id.map);
         map.addMapListener(new MapListener() {
             @Override
@@ -120,8 +134,23 @@ public class MainActivity extends Activity {
                     removeOverlays();
                 }
                 else {
-                    showEvents();
+                    if (chipGroup!=null)
+                    {
+                        if(chipGroup.getCheckedChipId()!=-1)
+                        {
+                            int id=chipGroup.getCheckedChipId();
+                            id--;
+                            Chip chip= (Chip) chipGroup.getChildAt(id);
+                            String category=chip.getText().toString();
+                            filterEvents(category);
+                        }
+                        else
+                            showEvents();
+                    }
+                    else
+                        showEvents();
                 }
+                map.getOverlays().add(myLocationNewOverlay);
                 return false;
             }
         });
@@ -144,6 +173,7 @@ public class MainActivity extends Activity {
             mapController.setZoom(15.0);
             mapController.setCenter(new GeoPoint(43.3209,21.8958));
         }
+        //endregion
         chipGroup=findViewById(R.id.categories_chip_group);
         //endregion
 
@@ -151,19 +181,13 @@ public class MainActivity extends Activity {
 
         //region FAB-s
         fabPointer=findViewById(R.id.fab_pointer);
-        fabPointer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showMyLocation();
-            }
+        fabPointer.setOnClickListener(v -> {
+            location();
+            map.getOverlays().add(myLocationNewOverlay);
+            myLocationNewOverlay.enableFollowLocation();
         });
         fabAdd=findViewById(R.id.fab_add);
-        fabAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivityForResult(new Intent(MainActivity.this,CreateEventActivity.class),1);
-            }
-        });
+        fabAdd.setOnClickListener(v -> startActivityForResult(new Intent(MainActivity.this,CreateEventActivity.class),1));
         //endregion
 
         //region LongPressMap
@@ -230,6 +254,17 @@ public class MainActivity extends Activity {
                     finish();
                 }
             }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode==RESULT_OK){
+            Toast.makeText(that, "Location is on", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Toast.makeText(that, "Location declined", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -433,6 +468,41 @@ public class MainActivity extends Activity {
             this.map.getOverlays().clear();
             map.invalidate();
         }
+    }
+    private void location(){
+
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
+        builder.setAlwaysShow(true);
+
+        Task<LocationSettingsResponse> result = LocationServices.getSettingsClient(this)
+                .checkLocationSettings(builder.build());
+        result.addOnCompleteListener(task -> {
+            try {
+                LocationSettingsResponse response =
+                        task.getResult(ApiException.class);
+            } catch (ApiException ex) {
+                switch (ex.getStatusCode()) {
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        try {
+                            ResolvableApiException resolvableApiException =
+                                    (ResolvableApiException) ex;
+                            resolvableApiException
+                                    .startResolutionForResult(MainActivity.this,
+                                            1);
+                        } catch (IntentSender.SendIntentException e) {
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+
+                        break;
+                }
+            }
+        });
     }
     //endregion
 }
