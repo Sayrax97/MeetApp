@@ -78,4 +78,15 @@
     <string name="delete_image">Delete image</string>
     <string name="event_attendees">People attending event</string>
     <string name="edit_event">Edit event</string>
+    <string name="morning">Morning (6am-12am)</string>
+    <string name="afternoon">Afternoon (12am-6pm)</string>
+    <string name="evening">Evening (6pm-12pm)</string>
+    <string name="midnight">After midnight(12pm-6am)</string>
+    <string name="monday">Monday</string>
+    <string name="tuesday">Tuesday</string>
+    <string name="wednesday">Wednesday</string>
+    <string name="thursday">Thursday</string>
+    <string name="friday">Friday</string>
+    <string name="saturday">Saturday</string>
+    <string name="sunday">Sunday</string>
 </resources>
