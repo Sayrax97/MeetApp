@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CompoundButton;
@@ -40,6 +41,9 @@ import com.team4infinity.meetapp.models.Event;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.events.MapEventsReceiver;
+import org.osmdroid.events.MapListener;
+import org.osmdroid.events.ScrollEvent;
+import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
@@ -103,6 +107,24 @@ public class MainActivity extends Activity {
         //endregion
         Configuration.getInstance().load(getApplicationContext(), PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         map = findViewById(R.id.map);
+        map.addMapListener(new MapListener() {
+            @Override
+            public boolean onScroll(ScrollEvent event) {
+                return false;
+            }
+
+            @Override
+            public boolean onZoom(ZoomEvent event) {
+                double zoom=event.getZoomLevel();
+                if(zoom<13.5){
+                    removeOverlays();
+                }
+                else {
+                    showEvents();
+                }
+                return false;
+            }
+        });
         map.setMultiTouchControls(true);
         //region Permissions
         if(ActivityCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE)!=PackageManager.PERMISSION_GRANTED){
@@ -190,16 +212,6 @@ public class MainActivity extends Activity {
         myLocationNewOverlay.enableMyLocation();
         map.getOverlays().add(myLocationNewOverlay);
         showMyLocation();
-//        Drawable pointerDrawable= ResourcesCompat.getDrawable(getResources(),R.drawable.pointer,null);
-//        Bitmap pointerIcon=null;
-//        if(pointerDrawable!=null){
-//            pointerIcon=((BitmapDrawable)pointerDrawable).getBitmap();
-////            Drawable d=new BitmapDrawable(getResources(),Bitmap.createScaledBitmap(pointerIcon,75,75,true));
-////            pointerIcon=((BitmapDrawable)d).getBitmap();
-//            myLocationNewOverlay.setDirectionArrow( pointerIcon, pointerIcon );
-//            myLocationNewOverlay.setPersonIcon(pointerIcon);
-//        }
-
     }
 
     @Override
@@ -232,24 +244,24 @@ public class MainActivity extends Activity {
                         for (String s : getCategories()) {
                             final Chip chip = (Chip) MainActivity.this.getLayoutInflater().inflate(R.layout.item_chip_layout, null, false);
                             chip.setText(s);
-
-                            storage.child(FIREBASE_CHILD_CAT).child(s.toLowerCase()+".png").getBytes(ONE_MEGA_BYTE).addOnCompleteListener(new OnCompleteListener<byte[]>() {
-                                @Override
-                                public void onComplete(@NonNull Task<byte[]> task) {
-                                    byte[] data = task.getResult();
-                                    Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-                                    chip.setChipIcon(new BitmapDrawable(getResources(),bmp));
-                                    chip.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                                        @Override
-                                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                                            if (isChecked)
-                                                Toast.makeText(that, "" + chip.getText() + " checked", Toast.LENGTH_SHORT).show();
-                                            else
-                                                Toast.makeText(that, chip.getText() + " unchecked", Toast.LENGTH_SHORT).show();
-                                        }
-                                    });
-                                    chipGroup.addView(chip);
+                            chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                                if (isChecked)
+                                {
+                                    getEvents();
+                                    Toast.makeText(that, "" + chip.getText() + " checked", Toast.LENGTH_SHORT).show();
+                                    filterEvents(s);
                                 }
+                                else
+                                {
+                                    Toast.makeText(that, chip.getText() + " unchecked", Toast.LENGTH_SHORT).show();
+                                    showEvents();
+                                }
+                            });
+                            storage.child(FIREBASE_CHILD_CAT).child(s.toLowerCase()+".png").getBytes(ONE_MEGA_BYTE).addOnCompleteListener(task -> {
+                                byte[] data = task.getResult();
+                                Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+                                chip.setChipIcon(new BitmapDrawable(getResources(),bmp));
+                                chipGroup.addView(chip);
                             });
                         }
                     }
@@ -264,18 +276,26 @@ public class MainActivity extends Activity {
             for (String s : getCategories()) {
                 final Chip chip = (Chip) MainActivity.this.getLayoutInflater().inflate(R.layout.item_chip_layout, null, false);
                 chip.setText(s);
+                chip.setText(s);
+                chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    if (isChecked)
+                    {
+                        getEvents();
+                        Toast.makeText(that, "" + chip.getText() + " checked", Toast.LENGTH_SHORT).show();
+                        filterEvents(s);
+                    }
+                    else
+                    {
+                        Toast.makeText(that, chip.getText() + " unchecked", Toast.LENGTH_SHORT).show();
+                        showEvents();
+                    }
+                });
                 storage.child(FIREBASE_CHILD_CAT).child(s.toLowerCase()+".png").getBytes(ONE_MEGA_BYTE).addOnCompleteListener(new OnCompleteListener<byte[]>() {
                     @Override
                     public void onComplete(@NonNull Task<byte[]> task) {
                         byte[] data = task.getResult();
                         Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
                         chip.setChipIcon(new BitmapDrawable(getResources(),bmp));
-                        chip.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Toast.makeText(that, "" + chip.getText() + " Clicked", Toast.LENGTH_SHORT).show();
-                            }
-                        });
                         chipGroup.addView(chip);
                     }
                 });
@@ -294,14 +314,12 @@ public class MainActivity extends Activity {
     private ArrayList<String> getCategories(){
         return Singleton.getInstance().getCategories();
     }
+
     private void showEvents() {
         final ArrayList<OverlayItem> items = new ArrayList<>();
-        if ( eventsOverlay!= null) {
-            this.map.getOverlays().remove(eventsOverlay);
-        }
+        removeOverlays();
         if (getEvents().isEmpty())
         {
-            //TODO bug sta ako su ucitani eventi treba ti else
         database.child("events").addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
@@ -326,6 +344,7 @@ public class MainActivity extends Activity {
                     }
                 }, getApplicationContext());
                 map.getOverlays().add(eventsOverlay);
+                map.invalidate();
             }
 
             @Override
@@ -349,33 +368,71 @@ public class MainActivity extends Activity {
             }
         });
         }
+        else {
+            for (Event e:getEvents()) {
+                OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
+                item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
+                items.add(item);
+            }
+            eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+                @Override
+                public boolean onItemSingleTapUp(int index, OverlayItem item) {
+                    Toast.makeText(that, ""+item.getTitle(), Toast.LENGTH_SHORT).show();
+                    return true;
+                }
 
-//        final ArrayList<OverlayItem> e = new ArrayList<>();
-//        for (int i = 0; i < MyPlacesData.getInstance().getMyPlaces().size(); i++) {
-//            MyPlace myPlace = MyPlacesData.getInstance().getMyPlaces().get(i);
-//            OverlayItem item = new OverlayItem(myPlace.getName(), myPlace.getDescription(), new GeoPoint(Double.parseDouble(myPlace.getLatitude()), Double.parseDouble(myPlace.getLongitude())));
-//            item.setMarker(getResources().getDrawable(R.drawable.baseline_beenhere_black_24));
-//            items.add(item);
-//        }
-//        eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
-//            @Override
-//            public boolean onItemSingleTapUp(int index, OverlayItem item) {
-//                Toast.makeText(that, ""+item.getTitle(), Toast.LENGTH_SHORT).show();
-//                return true;
-//            }
-//
-//            @Override
-//            public boolean onItemLongPress(int index, OverlayItem item) {
-////                Intent i = new Intent(MyPlacesMapsActivity.this, ViewMyPlaceActivity.class);
-////                i.putExtra("position", index);
-////                startActivityForResult(i, 5);
-//                return true;
-//            }
-//        }, getApplicationContext());
-//        map.getOverlays().add(eventsOverlay);
+                @Override
+                public boolean onItemLongPress(int index, OverlayItem item) {
+//                Intent i = new Intent(MyPlacesMapsActivity.this, ViewMyPlaceActivity.class);
+//                i.putExtra("position", index);
+//                startActivityForResult(i, 5);
+                    return true;
+                }
+            }, getApplicationContext());
+            map.getOverlays().add(eventsOverlay);
+            map.invalidate();
+        }
     }
+
     private ArrayList<Event> getEvents(){
         return Singleton.getInstance().getEvents();
+    }
+
+    private void filterEvents(String category){
+        final ArrayList<OverlayItem> items = new ArrayList<>();
+        removeOverlays();
+        for (Event e:getEvents()) {
+            if(e.category.compareTo(category)==0)
+            {
+                OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
+                item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
+                items.add(item);
+            }
+        }
+        eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+            @Override
+            public boolean onItemSingleTapUp(int index, OverlayItem item) {
+                Toast.makeText(that, ""+item.getTitle(), Toast.LENGTH_SHORT).show();
+                return true;
+            }
+
+            @Override
+            public boolean onItemLongPress(int index, OverlayItem item) {
+//                Intent i = new Intent(MyPlacesMapsActivity.this, ViewMyPlaceActivity.class);
+//                i.putExtra("position", index);
+//                startActivityForResult(i, 5);
+                return true;
+            }
+        }, getApplicationContext());
+        map.getOverlays().add(eventsOverlay);
+        map.invalidate();
+    }
+
+    private void removeOverlays(){
+        if ( eventsOverlay!= null) {
+            this.map.getOverlays().clear();
+            map.invalidate();
+        }
     }
     //endregion
 }
