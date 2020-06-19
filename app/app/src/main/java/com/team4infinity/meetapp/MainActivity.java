@@ -9,19 +9,25 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CompoundButton;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.common.api.ApiException;
@@ -59,13 +65,19 @@ import org.osmdroid.events.ScrollEvent;
 import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.IconOverlay;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.MapEventsOverlay;
+import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 public class MainActivity extends Activity {
 
@@ -83,11 +95,13 @@ public class MainActivity extends Activity {
     private ChipGroup chipGroup;
     private FloatingActionButton fabPointer,fabAdd;
     private BottomNavigationView bottomNav;
+    private SearchView searchView;
     private DatabaseReference database;
     private StorageReference storage;
     private ItemizedIconOverlay eventsOverlay;
     //endregion
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //region Init
@@ -97,7 +111,11 @@ public class MainActivity extends Activity {
         database= FirebaseDatabase.getInstance().getReference();
         storage= FirebaseStorage.getInstance().getReference();
         bottomNav=findViewById(R.id.bottom_nav_bar);
+        searchView=findViewById(R.id.searchView);
         bottomNav.setSelectedItemId(R.id.nb_map);
+        chipGroup=findViewById(R.id.categories_chip_group);
+        //endregion
+
         //region BottomNavBar
         bottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -118,6 +136,7 @@ public class MainActivity extends Activity {
             }
         });
         //endregion
+
         Configuration.getInstance().load(getApplicationContext(), PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         //region Map
         map = findViewById(R.id.map);
@@ -142,15 +161,18 @@ public class MainActivity extends Activity {
                             id--;
                             Chip chip= (Chip) chipGroup.getChildAt(id);
                             String category=chip.getText().toString();
+                            if(map.getOverlays().size()>0)
                             filterEvents(category);
                         }
                         else
                             showEvents();
                     }
-                    else
+                    else{
+                        if(map.getOverlays().size()>0)
                         showEvents();
+                    }
+                    map.getOverlays().add(myLocationNewOverlay);
                 }
-                map.getOverlays().add(myLocationNewOverlay);
                 return false;
             }
         });
@@ -173,8 +195,6 @@ public class MainActivity extends Activity {
             mapController.setZoom(15.0);
             mapController.setCenter(new GeoPoint(43.3209,21.8958));
         }
-        //endregion
-        chipGroup=findViewById(R.id.categories_chip_group);
         //endregion
 
         addCategories();
@@ -213,6 +233,26 @@ public class MainActivity extends Activity {
         map.getOverlays().add(OverlayEvents);
         //endregion
 
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Toast.makeText(that, ""+query, Toast.LENGTH_SHORT).show();
+                Event event=getEvent(query);
+                if (event==null){
+                    Toast.makeText(that, "No such event found", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    GeoPoint geoPoint=new GeoPoint(event.getLat(),event.getLon());
+                    goToGeoPoint(geoPoint);
+                }
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
         showEvents();
     }
 
@@ -221,6 +261,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         bottomNav.setSelectedItemId(R.id.nb_map);
+        showEvents();
         map.onResume();
     }
 
@@ -231,12 +272,6 @@ public class MainActivity extends Activity {
     }
     //endregion
 
-    private void setMyLocationOverlay(){
-        myLocationNewOverlay=new MyLocationNewOverlay(new GpsMyLocationProvider(this),map);
-        myLocationNewOverlay.enableMyLocation();
-        map.getOverlays().add(myLocationNewOverlay);
-        showMyLocation();
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -336,6 +371,13 @@ public class MainActivity extends Activity {
                 });
             }
         }
+    }
+
+    private void setMyLocationOverlay(){
+        myLocationNewOverlay=new MyLocationNewOverlay(new GpsMyLocationProvider(this),map);
+        myLocationNewOverlay.enableMyLocation();
+        map.getOverlays().add(myLocationNewOverlay);
+        showMyLocation();
     }
 
     private void showMyLocation(){
@@ -469,6 +511,7 @@ public class MainActivity extends Activity {
             map.invalidate();
         }
     }
+
     private void location(){
 
         LocationRequest locationRequest = LocationRequest.create();
@@ -503,6 +546,112 @@ public class MainActivity extends Activity {
                 }
             }
         });
+    }
+
+    private GeoPoint getLocationFromAddress(String strAddress) throws IOException {
+
+        Geocoder coder = new Geocoder(this);
+        List<Address> address;
+        GeoPoint p1;
+
+        try {
+            address = coder.getFromLocationName(strAddress,5);
+            if (address==null) {
+                return null;
+            }
+            if(address.size()==0){
+                return null;
+            }
+            Address location=address.get(0);
+            location.getLatitude();
+            location.getLongitude();
+
+            p1 = new GeoPoint(location.getLatitude(),
+                    location.getLongitude());
+
+            return p1;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+//    private class AddressToGeoPointAsync extends AsyncTask<String, Boolean, GeoPoint> {
+//
+//        private Context context;
+//
+//        public AddressToGeoPointAsync(Context context) {
+//            this.context = context;
+//        }
+//
+//        protected void onPreExecute() {
+//        }
+//
+//        @Override
+//        protected GeoPoint doInBackground(String... strAddress) {
+//
+//            String address=strAddress[0];
+//            Geocoder coder = new Geocoder(context);
+//            List<Address> addresses;
+//            GeoPoint p1;
+//
+//            try {
+//                addresses = coder.getFromLocationName(strAddress[0],5);
+//                if (addresses==null) {
+//                    return null;
+//                }
+//                Address location=addresses.get(0);
+//                location.getLatitude();
+//                location.getLongitude();
+//
+//                p1 = new GeoPoint((double) (location.getLatitude()),
+//                        (double) (location.getLongitude()));
+//
+//                return p1;
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//            return null;
+//        }
+//
+//        protected void onPostExecute(GeoPoint result) {
+//        }
+//
+//    }
+
+    private void goToGeoPoint(GeoPoint geoPoint){
+        mapController = map.getController();
+        if (mapController != null) {
+            mapController.setZoom(17.0);
+            mapController.animateTo(geoPoint);
+        }
+    }
+    private void setUpPointerOverlay(GeoPoint geoPoint){
+        ArrayList<OverlayItem> items=new ArrayList<>();
+        OverlayItem item = new OverlayItem("Address", "Searched address",geoPoint);
+        item.setMarker(getResources().getDrawable(R.drawable.red_pointer_small,null));
+        items.add(item);
+        map.getOverlays().add(new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+            @Override
+            public boolean onItemSingleTapUp(int index, OverlayItem item) {
+                return false;
+            }
+
+            @Override
+            public boolean onItemLongPress(int index, OverlayItem item) {
+                return false;
+            }
+        },that));
+        map.invalidate();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private Event getEvent(String filter){
+       List<Event> events = getEvents().stream().filter(e->e.title.toLowerCase().compareTo(filter.toLowerCase())==0).collect(Collectors.toList());
+       if(events.size()>0)
+           return events.get(0);
+       else
+           return null;
     }
     //endregion
 }
