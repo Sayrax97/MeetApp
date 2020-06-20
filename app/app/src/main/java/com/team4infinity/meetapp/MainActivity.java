@@ -74,6 +74,7 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.IconOverlay;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.MapEventsOverlay;
+import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
@@ -177,7 +178,7 @@ public class MainActivity extends Activity {
                             showEvents();
                     }
                     else{
-                        if(map.getOverlays().size()>0)
+                        if(map.getOverlays().size()!=0)
                         showEvents();
                     }
                     map.getOverlays().add(myLocationNewOverlay);
@@ -212,9 +213,9 @@ public class MainActivity extends Activity {
         //region FAB-s
         fabPointer=findViewById(R.id.fab_pointer);
         fabPointer.setOnClickListener(v -> {
+            Log.d(TAG, "onCreate: "+getEvents().size());
             location();
-            map.getOverlays().add(myLocationNewOverlay);
-            myLocationNewOverlay.enableFollowLocation();
+            setMyLocationOverlay();
         });
         fabAdd=findViewById(R.id.fab_add);
         fabAdd.setOnClickListener(v -> startActivityForResult(new Intent(MainActivity.this,CreateEventActivity.class),1));
@@ -241,7 +242,7 @@ public class MainActivity extends Activity {
                 return false;
             }
         });
-        showEvents();
+        showEventsInit();
         setUpLongPress();
     }
 
@@ -289,6 +290,7 @@ public class MainActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         if(resultCode==RESULT_OK){
             Toast.makeText(that, "Location is on", Toast.LENGTH_SHORT).show();
+            setMyLocationOverlay();
         }
         else {
             Toast.makeText(that, "Location declined", Toast.LENGTH_SHORT).show();
@@ -388,66 +390,17 @@ public class MainActivity extends Activity {
     private void showEvents() {
         final ArrayList<OverlayItem> items = new ArrayList<>();
         removeOverlays();
-        if (getEvents().isEmpty())
+        if (!getEvents().isEmpty())
         {
-        database.child("events").addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                Event e=dataSnapshot.getValue(Event.class);
-                Singleton.getInstance().events.add(e);
-                OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
-                item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
-                items.add(item);
-                eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
-                    @Override
-                    public boolean onItemSingleTapUp(int index, OverlayItem item) {
-                        Toast.makeText(that, ""+item.getTitle(), Toast.LENGTH_SHORT).show();
-                        return true;
-                    }
-
-                    @Override
-                    public boolean onItemLongPress(int index, OverlayItem item) {
-//                Intent i = new Intent(MyPlacesMapsActivity.this, ViewMyPlaceActivity.class);
-//                i.putExtra("position", index);
-//                startActivityForResult(i, 5);
-                        return true;
-                    }
-                }, getApplicationContext());
-//                EventAdapterMain adapterMain=new EventAdapterMain(that,getEvents());
-//                autoCompleteTextView.setAdapter(adapterMain);
-                map.getOverlays().add(eventsOverlay);
-                map.invalidate();
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-        }
-        else {
             for (Event e:getEvents()) {
                 OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
                 item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
                 items.add(item);
+                Marker m= new Marker(map);
+                m.setTextIcon(e.getTitle());
+                m.setPosition(new GeoPoint(e.lat,e.lon));
+                map.getOverlays().add(m);
             }
-//            EventAdapterMain adapterMain=new EventAdapterMain(that,getEvents());
-//            autoCompleteTextView.setAdapter(adapterMain);
             eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
                 @Override
                 public boolean onItemSingleTapUp(int index, OverlayItem item) {
@@ -468,6 +421,66 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void showEventsInit(){
+        final ArrayList<OverlayItem> items = new ArrayList<>();
+        removeOverlays();
+        if (getEvents().isEmpty())
+        {
+            database.child("events").addChildEventListener(new ChildEventListener() {
+                @Override
+                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                    Log.d(TAG, "onChildAdded: Dodo sam");
+                    Event e=dataSnapshot.getValue(Event.class);
+                    Singleton.getInstance().events.add(e);
+                    OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
+                    item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
+                    items.add(item);
+                    Marker m= new Marker(map);
+                    m.setTextIcon(e.getTitle());
+                    m.setPosition(new GeoPoint(e.lat,e.lon));
+                    map.getOverlays().add(m);
+                    eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+                        @Override
+                        public boolean onItemSingleTapUp(int index, OverlayItem item) {
+                            Toast.makeText(that, ""+item.getTitle(), Toast.LENGTH_SHORT).show();
+                            return true;
+                        }
+
+                        @Override
+                        public boolean onItemLongPress(int index, OverlayItem item) {
+//                Intent i = new Intent(MyPlacesMapsActivity.this, ViewMyPlaceActivity.class);
+//                i.putExtra("position", index);
+//                startActivityForResult(i, 5);
+                            return true;
+                        }
+                    }, getApplicationContext());
+                    map.getOverlays().add(eventsOverlay);
+                    map.invalidate();
+                }
+
+                @Override
+                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                }
+
+                @Override
+                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+
+        }
+    }
     private ArrayList<Event> getEvents(){
         return Singleton.getInstance().getEvents();
     }
@@ -481,6 +494,10 @@ public class MainActivity extends Activity {
                 OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
                 item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
                 items.add(item);
+                Marker m= new Marker(map);
+                m.setTextIcon(e.getTitle());
+                m.setPosition(new GeoPoint(e.lat,e.lon));
+                map.getOverlays().add(m);
             }
         }
         eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
@@ -581,58 +598,7 @@ public class MainActivity extends Activity {
         addresses = geocoder.getFromLocation(lat, lon, 1);
 
         return addresses.get(0);
-//        int br=0;
-//        .getAddressLine(0).substring(0,addresses.get(0).getAddressLine(0).indexOf(","))
-//        for (String s:getCities()) {
-//            if(s.equals(addresses.get(0).getLocality()))
-//                citySpinner.setSelectedIndex(br);
-//            br++;
-//        }
-
     }
-
-//    private class AddressToGeoPointAsync extends AsyncTask<String, Boolean, GeoPoint> {
-//
-//        private Context context;
-//
-//        public AddressToGeoPointAsync(Context context) {
-//            this.context = context;
-//        }
-//
-//        protected void onPreExecute() {
-//        }
-//
-//        @Override
-//        protected GeoPoint doInBackground(String... strAddress) {
-//
-//            String address=strAddress[0];
-//            Geocoder coder = new Geocoder(context);
-//            List<Address> addresses;
-//            GeoPoint p1;
-//
-//            try {
-//                addresses = coder.getFromLocationName(strAddress[0],5);
-//                if (addresses==null) {
-//                    return null;
-//                }
-//                Address location=addresses.get(0);
-//                location.getLatitude();
-//                location.getLongitude();
-//
-//                p1 = new GeoPoint((double) (location.getLatitude()),
-//                        (double) (location.getLongitude()));
-//
-//                return p1;
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//            return null;
-//        }
-//
-//        protected void onPostExecute(GeoPoint result) {
-//        }
-//
-//    }
 
     private void goToGeoPoint(GeoPoint geoPoint,double zoom){
         mapController = map.getController();
@@ -682,6 +648,7 @@ public class MainActivity extends Activity {
         MapEventsOverlay OverlayEvents = new MapEventsOverlay(mapEventsReceiver);
         map.getOverlays().add(OverlayEvents);
     }
+
     private void setUpPointerOverlay(GeoPoint geoPoint){
         ArrayList<OverlayItem> items=new ArrayList<>();
         OverlayItem item = new OverlayItem("Address", "Searched address",geoPoint);

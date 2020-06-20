@@ -80,10 +80,13 @@ public class EventsActivity extends AppCompatActivity {
         //endregion
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onResume() {
         super.onResume();
+        events=Singleton.getInstance().events;
         bottomNav.setSelectedItemId(R.id.nb_events);
+        setRecyclerView();
     }
 
     @SuppressLint("RestrictedApi")
@@ -106,8 +109,9 @@ public class EventsActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
-            case 1:{
+            case 0:{
                 startActivity(new Intent(this,FilterActivity.class));
+                break;
             }
             case 2:{
                 Toast.makeText(that, "Ascending clicked", Toast.LENGTH_SHORT).show();
