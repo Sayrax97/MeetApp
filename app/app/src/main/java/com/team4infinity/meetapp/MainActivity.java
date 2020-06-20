@@ -21,13 +21,18 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.SearchView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.common.api.ApiException;
@@ -53,6 +58,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.team4infinity.meetapp.adapters.EventAdapterMain;
 import com.team4infinity.meetapp.models.CategoryList;
 import com.team4infinity.meetapp.models.Event;
 
@@ -72,10 +78,12 @@ import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
+import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -95,7 +103,9 @@ public class MainActivity extends Activity {
     private ChipGroup chipGroup;
     private FloatingActionButton fabPointer,fabAdd;
     private BottomNavigationView bottomNav;
+    private ConstraintLayout popUpConstraintLayout;
     private SearchView searchView;
+//    private AutoCompleteTextView autoCompleteTextView;
     private DatabaseReference database;
     private StorageReference storage;
     private ItemizedIconOverlay eventsOverlay;
@@ -111,34 +121,33 @@ public class MainActivity extends Activity {
         database= FirebaseDatabase.getInstance().getReference();
         storage= FirebaseStorage.getInstance().getReference();
         bottomNav=findViewById(R.id.bottom_nav_bar);
+        popUpConstraintLayout=findViewById(R.id.popupWindowMain);
         searchView=findViewById(R.id.searchView);
+//        autoCompleteTextView=findViewById(R.id.autoCompleteMain);
         bottomNav.setSelectedItemId(R.id.nb_map);
         chipGroup=findViewById(R.id.categories_chip_group);
         //endregion
 
         //region BottomNavBar
-        bottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                switch (item.getItemId()){
-                    case R.id.nb_profile:{
-                        Intent intent=new Intent(that,ProfileActivity.class);
-                        that.startActivity(intent);
-                        break;
-                    }
-                    case R.id.nb_events:{
-                        Intent intent=new Intent(that,EventsActivity.class);
-                        that.startActivity(intent);
-                        break;
-                    }
+        bottomNav.setOnNavigationItemSelectedListener(item -> {
+            switch (item.getItemId()){
+                case R.id.nb_profile:{
+                    Intent intent=new Intent(that,ProfileActivity.class);
+                    that.startActivity(intent);
+                    break;
                 }
-                return true;
+                case R.id.nb_events:{
+                    Intent intent=new Intent(that,EventsActivity.class);
+                    that.startActivity(intent);
+                    break;
+                }
             }
+            return true;
         });
         //endregion
 
-        Configuration.getInstance().load(getApplicationContext(), PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         //region Map
+        Configuration.getInstance().load(getApplicationContext(), PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         map = findViewById(R.id.map);
         map.addMapListener(new MapListener() {
             @Override
@@ -173,6 +182,7 @@ public class MainActivity extends Activity {
                     }
                     map.getOverlays().add(myLocationNewOverlay);
                 }
+                setUpLongPress();
                 return false;
             }
         });
@@ -210,28 +220,6 @@ public class MainActivity extends Activity {
         fabAdd.setOnClickListener(v -> startActivityForResult(new Intent(MainActivity.this,CreateEventActivity.class),1));
         //endregion
 
-        //region LongPressMap
-        MapEventsReceiver mapEventsReceiver=new MapEventsReceiver() {
-            @Override
-            public boolean singleTapConfirmedHelper(GeoPoint p) {
-                return false;
-            }
-
-            @Override
-            public boolean longPressHelper(GeoPoint p) {
-                Double lon = (p.getLongitude());
-                Double lat = (p.getLatitude());
-                Intent locationIntent = new Intent(MainActivity.this,CreateEventActivity.class);
-                locationIntent.putExtra("lon", lon);
-                locationIntent.putExtra("lat", lat);
-                startActivityForResult(locationIntent,1);
-
-                return false;
-            }
-        };
-        MapEventsOverlay OverlayEvents = new MapEventsOverlay(mapEventsReceiver);
-        map.getOverlays().add(OverlayEvents);
-        //endregion
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -243,7 +231,7 @@ public class MainActivity extends Activity {
                 }
                 else {
                     GeoPoint geoPoint=new GeoPoint(event.getLat(),event.getLon());
-                    goToGeoPoint(geoPoint);
+                    goToGeoPoint(geoPoint,17.0);
                 }
                 return false;
             }
@@ -254,6 +242,7 @@ public class MainActivity extends Activity {
             }
         });
         showEvents();
+        setUpLongPress();
     }
 
     //region Resume/Pause
@@ -262,6 +251,8 @@ public class MainActivity extends Activity {
         super.onResume();
         bottomNav.setSelectedItemId(R.id.nb_map);
         showEvents();
+        setUpLongPress();
+        showMyLocation();
         map.onResume();
     }
 
@@ -273,6 +264,7 @@ public class MainActivity extends Activity {
     //endregion
 
 
+    //region Overrides
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
@@ -302,6 +294,7 @@ public class MainActivity extends Activity {
             Toast.makeText(that, "Location declined", Toast.LENGTH_SHORT).show();
         }
     }
+    //endregion
 
     //region My Functions
     private void addCategories(){
@@ -420,6 +413,8 @@ public class MainActivity extends Activity {
                         return true;
                     }
                 }, getApplicationContext());
+//                EventAdapterMain adapterMain=new EventAdapterMain(that,getEvents());
+//                autoCompleteTextView.setAdapter(adapterMain);
                 map.getOverlays().add(eventsOverlay);
                 map.invalidate();
             }
@@ -451,6 +446,8 @@ public class MainActivity extends Activity {
                 item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
                 items.add(item);
             }
+//            EventAdapterMain adapterMain=new EventAdapterMain(that,getEvents());
+//            autoCompleteTextView.setAdapter(adapterMain);
             eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
                 @Override
                 public boolean onItemSingleTapUp(int index, OverlayItem item) {
@@ -576,6 +573,24 @@ public class MainActivity extends Activity {
         return null;
     }
 
+    public Address  getAddressFromLonAndLat(double lat,double lon) throws IOException {
+        Geocoder geocoder;
+        List<Address> addresses;
+        geocoder = new Geocoder(this, Locale.getDefault());
+
+        addresses = geocoder.getFromLocation(lat, lon, 1);
+
+        return addresses.get(0);
+//        int br=0;
+//        .getAddressLine(0).substring(0,addresses.get(0).getAddressLine(0).indexOf(","))
+//        for (String s:getCities()) {
+//            if(s.equals(addresses.get(0).getLocality()))
+//                citySpinner.setSelectedIndex(br);
+//            br++;
+//        }
+
+    }
+
 //    private class AddressToGeoPointAsync extends AsyncTask<String, Boolean, GeoPoint> {
 //
 //        private Context context;
@@ -619,12 +634,53 @@ public class MainActivity extends Activity {
 //
 //    }
 
-    private void goToGeoPoint(GeoPoint geoPoint){
+    private void goToGeoPoint(GeoPoint geoPoint,double zoom){
         mapController = map.getController();
         if (mapController != null) {
-            mapController.setZoom(17.0);
+            mapController.setZoom(zoom);
             mapController.animateTo(geoPoint);
         }
+    }
+
+    private void setUpLongPress(){
+        MapEventsReceiver mapEventsReceiver=new MapEventsReceiver() {
+            @Override
+            public boolean singleTapConfirmedHelper(GeoPoint p) {
+                return false;
+            }
+
+            @Override
+            public boolean longPressHelper(GeoPoint p) {
+                Log.d(TAG, "longPressHelper: clicked");
+                TextView addressTextView=findViewById(R.id.popupAddress);
+                Button cancel=findViewById(R.id.popupCancel);
+                Button createEvent=findViewById(R.id.popupCreateEvent);
+                Address address;
+                cancel.setOnClickListener(v -> {
+                    popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                });
+                createEvent.setOnClickListener(v -> {
+                    popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                    Intent locationIntent = new Intent(MainActivity.this,CreateEventActivity.class);
+                    locationIntent.putExtra("lon", p.getLongitude());
+                    locationIntent.putExtra("lat", p.getLatitude());
+                    startActivityForResult(locationIntent,1);
+                });
+
+                try {
+                    address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
+                    addressTextView.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
+                    popUpConstraintLayout.setVisibility(View.VISIBLE);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                return false;
+            }
+        };
+        MapEventsOverlay OverlayEvents = new MapEventsOverlay(mapEventsReceiver);
+        map.getOverlays().add(OverlayEvents);
     }
     private void setUpPointerOverlay(GeoPoint geoPoint){
         ArrayList<OverlayItem> items=new ArrayList<>();

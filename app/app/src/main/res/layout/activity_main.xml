@@ -43,6 +43,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+<!--    <AutoCompleteTextView-->
+<!--        android:id="@+id/autoCompleteMain"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_margin="10dp"-->
+<!--        android:hint="@string/enter_event_name"-->
+<!--        android:completionThreshold="1"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.8"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/searchView"-->
+<!--        />-->
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add"
         android:layout_width="wrap_content"
@@ -81,4 +95,60 @@
         app:menu="@menu/nav_bar"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/popupWindowMain"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:elevation="10dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"
+        android:visibility="invisible"
+        android:background="@color/colorBackWhite"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/popupAddress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/address"
+            android:textColor="@color/colorBlack"
+            android:textSize="35sp"
+            app:layout_constraintBottom_toBottomOf="@id/popupWindowMain"
+            app:layout_constraintEnd_toEndOf="@+id/popupWindowMain"
+            app:layout_constraintStart_toStartOf="@+id/popupWindowMain"
+            app:layout_constraintTop_toTopOf="@+id/popupWindowMain"
+            app:layout_constraintVertical_bias="0.25" />
+
+        <Button
+            android:id="@+id/popupCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cancel"
+            android:background="@color/colorPrimary"
+            android:textColor="@color/colorBackWhite"
+            android:textSize="24sp"
+            app:layout_constraintEnd_toStartOf="@+id/popupCreateEvent"
+            app:layout_constraintStart_toStartOf="@+id/popupWindowMain"
+            app:layout_constraintBottom_toBottomOf="@+id/popupWindowMain"
+            app:layout_constraintHorizontal_bias="0.05">
+
+        </Button>
+        <Button
+            android:id="@+id/popupCreateEvent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/create_event"
+            android:background="@color/colorPrimary"
+            android:textColor="@color/colorBackWhite"
+            android:textSize="24sp"
+            app:layout_constraintEnd_toEndOf="@+id/popupWindowMain"
+            app:layout_constraintStart_toEndOf="@+id/popupCancel"
+            app:layout_constraintBottom_toBottomOf="@+id/popupWindowMain"
+            app:layout_constraintHorizontal_bias="0.95">
+
+        </Button>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
