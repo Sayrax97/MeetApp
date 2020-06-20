@@ -8,6 +8,7 @@ import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Address;
 import android.location.Geocoder;
@@ -397,6 +398,7 @@ public class MainActivity extends Activity {
                 item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
                 items.add(item);
                 Marker m= new Marker(map);
+                m.setTextLabelBackgroundColor(Color.TRANSPARENT);
                 m.setTextIcon(e.getTitle());
                 m.setPosition(new GeoPoint(e.lat,e.lon));
                 map.getOverlays().add(m);
@@ -436,6 +438,7 @@ public class MainActivity extends Activity {
                     item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
                     items.add(item);
                     Marker m= new Marker(map);
+                    m.setTextLabelBackgroundColor(Color.TRANSPARENT);
                     m.setTextIcon(e.getTitle());
                     m.setPosition(new GeoPoint(e.lat,e.lon));
                     map.getOverlays().add(m);
@@ -495,6 +498,7 @@ public class MainActivity extends Activity {
                 item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
                 items.add(item);
                 Marker m= new Marker(map);
+                m.setTextLabelBackgroundColor(Color.TRANSPARENT);
                 m.setTextIcon(e.getTitle());
                 m.setPosition(new GeoPoint(e.lat,e.lon));
                 map.getOverlays().add(m);
