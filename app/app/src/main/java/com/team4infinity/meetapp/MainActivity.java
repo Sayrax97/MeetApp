@@ -63,6 +63,7 @@ import com.team4infinity.meetapp.adapters.EventAdapterMain;
 import com.team4infinity.meetapp.models.CategoryList;
 import com.team4infinity.meetapp.models.Event;
 
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.events.DelayedMapListener;
@@ -104,6 +105,9 @@ public class MainActivity extends Activity {
     private MyLocationNewOverlay myLocationNewOverlay;
     private ChipGroup chipGroup;
     private FloatingActionButton fabPointer,fabAdd;
+    private TextView popupTextView1,popupTextView2;
+    private Button cancelBtn;
+    private Button popUpBtn;
     private BottomNavigationView bottomNav;
     private ConstraintLayout popUpConstraintLayout;
     private SearchView searchView;
@@ -125,6 +129,10 @@ public class MainActivity extends Activity {
         bottomNav=findViewById(R.id.bottom_nav_bar);
         popUpConstraintLayout=findViewById(R.id.popupWindowMain);
         searchView=findViewById(R.id.searchView);
+        popupTextView1=findViewById(R.id.popupText1);
+        popupTextView2=findViewById(R.id.popupText2);
+        cancelBtn=findViewById(R.id.popupCancel);
+        popUpBtn=findViewById(R.id.popupBtn);
 //        autoCompleteTextView=findViewById(R.id.autoCompleteMain);
         bottomNav.setSelectedItemId(R.id.nb_map);
         chipGroup=findViewById(R.id.categories_chip_group);
@@ -406,15 +414,33 @@ public class MainActivity extends Activity {
             eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
                 @Override
                 public boolean onItemSingleTapUp(int index, OverlayItem item) {
-                    Toast.makeText(that, ""+item.getTitle(), Toast.LENGTH_SHORT).show();
-                    return true;
+                    Address address;
+                    IGeoPoint p = item.getPoint();
+                    popUpBtn.setText("View Event");
+                    cancelBtn.setOnClickListener(v -> {
+                        popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                    });
+                    popUpBtn.setOnClickListener(v -> {
+                        popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                    });
+
+                    try {
+                        address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
+                        popupTextView1.setText(item.getTitle());
+                        popupTextView2.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
+                        popUpConstraintLayout.setVisibility(View.VISIBLE);
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    return false;
                 }
 
                 @Override
                 public boolean onItemLongPress(int index, OverlayItem item) {
-//                Intent i = new Intent(MyPlacesMapsActivity.this, ViewMyPlaceActivity.class);
-//                i.putExtra("position", index);
-//                startActivityForResult(i, 5);
+                    GeoPoint u = getUserLocation();
+                    IGeoPoint p = item.getPoint();
                     return true;
                 }
             }, getApplicationContext());
@@ -423,15 +449,20 @@ public class MainActivity extends Activity {
         }
     }
 
+    private GeoPoint getUserLocation(){
+        myLocationNewOverlay=new MyLocationNewOverlay(new GpsMyLocationProvider(this),map);
+        return myLocationNewOverlay.getMyLocation();
+
+    }
     private void showEventsInit(){
         final ArrayList<OverlayItem> items = new ArrayList<>();
         removeOverlays();
+        Event e = new Event();
         if (getEvents().isEmpty())
         {
             database.child("events").addChildEventListener(new ChildEventListener() {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                    Log.d(TAG, "onChildAdded: Dodo sam");
                     Event e=dataSnapshot.getValue(Event.class);
                     Singleton.getInstance().events.add(e);
                     OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
@@ -445,8 +476,27 @@ public class MainActivity extends Activity {
                     eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
                         @Override
                         public boolean onItemSingleTapUp(int index, OverlayItem item) {
-                            Toast.makeText(that, ""+item.getTitle(), Toast.LENGTH_SHORT).show();
-                            return true;
+                            Address address;
+                            IGeoPoint p = item.getPoint();
+                            popUpBtn.setText("View Event");
+                            cancelBtn.setOnClickListener(v -> {
+                                popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                            });
+                            popUpBtn.setOnClickListener(v -> {
+                                popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                            });
+
+                            try {
+                                address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
+                                popupTextView1.setText(item.getTitle());
+                                popupTextView2.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
+                                popUpConstraintLayout.setVisibility(View.VISIBLE);
+
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                            return false;
                         }
 
                         @Override
@@ -459,6 +509,7 @@ public class MainActivity extends Activity {
                     }, getApplicationContext());
                     map.getOverlays().add(eventsOverlay);
                     map.invalidate();
+
                 }
 
                 @Override
@@ -484,6 +535,7 @@ public class MainActivity extends Activity {
 
         }
     }
+
     private ArrayList<Event> getEvents(){
         return Singleton.getInstance().getEvents();
     }
@@ -507,8 +559,27 @@ public class MainActivity extends Activity {
         eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
             @Override
             public boolean onItemSingleTapUp(int index, OverlayItem item) {
-                Toast.makeText(that, ""+item.getTitle(), Toast.LENGTH_SHORT).show();
-                return true;
+                Address address;
+                IGeoPoint p = item.getPoint();
+                popUpBtn.setText("View Event");
+                cancelBtn.setOnClickListener(v -> {
+                    popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                });
+                popUpBtn.setOnClickListener(v -> {
+                    popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                });
+
+                try {
+                    address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
+                    popupTextView1.setText(item.getTitle());
+                    popupTextView2.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
+                    popUpConstraintLayout.setVisibility(View.VISIBLE);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                return false;
             }
 
             @Override
@@ -621,15 +692,12 @@ public class MainActivity extends Activity {
 
             @Override
             public boolean longPressHelper(GeoPoint p) {
-                Log.d(TAG, "longPressHelper: clicked");
-                TextView addressTextView=findViewById(R.id.popupAddress);
-                Button cancel=findViewById(R.id.popupCancel);
-                Button createEvent=findViewById(R.id.popupCreateEvent);
                 Address address;
-                cancel.setOnClickListener(v -> {
+                popUpBtn.setText(getResources().getText(R.string.create_event));
+                cancelBtn.setOnClickListener(v -> {
                     popUpConstraintLayout.setVisibility(View.INVISIBLE);
                 });
-                createEvent.setOnClickListener(v -> {
+                popUpBtn.setOnClickListener(v -> {
                     popUpConstraintLayout.setVisibility(View.INVISIBLE);
                     Intent locationIntent = new Intent(MainActivity.this,CreateEventActivity.class);
                     locationIntent.putExtra("lon", p.getLongitude());
@@ -639,7 +707,8 @@ public class MainActivity extends Activity {
 
                 try {
                     address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
-                    addressTextView.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
+                    popupTextView1.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
+                    popupTextView2.setText(address.getLocality());
                     popUpConstraintLayout.setVisibility(View.VISIBLE);
 
                 } catch (IOException e) {

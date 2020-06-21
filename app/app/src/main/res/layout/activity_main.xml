@@ -110,7 +110,7 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <TextView
-            android:id="@+id/popupAddress"
+            android:id="@+id/popupText1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/address"
@@ -120,7 +120,18 @@
             app:layout_constraintEnd_toEndOf="@+id/popupWindowMain"
             app:layout_constraintStart_toStartOf="@+id/popupWindowMain"
             app:layout_constraintTop_toTopOf="@+id/popupWindowMain"
-            app:layout_constraintVertical_bias="0.25" />
+            app:layout_constraintVertical_bias="0.20" />
+        <TextView
+            android:id="@+id/popupText2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/cardview_dark_background"
+            android:textSize="26sp"
+            app:layout_constraintBottom_toBottomOf="@id/popupWindowMain"
+            app:layout_constraintEnd_toEndOf="@+id/popupWindowMain"
+            app:layout_constraintStart_toStartOf="@+id/popupWindowMain"
+            app:layout_constraintTop_toTopOf="@+id/popupWindowMain"
+            app:layout_constraintVertical_bias="0.50" />
 
         <Button
             android:id="@+id/popupCancel"
@@ -129,21 +140,27 @@
             android:text="@string/cancel"
             android:background="@color/colorPrimary"
             android:textColor="@color/colorBackWhite"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            style="@style/AppThemeMat"
             android:textSize="24sp"
-            app:layout_constraintEnd_toStartOf="@+id/popupCreateEvent"
+            app:layout_constraintEnd_toStartOf="@+id/popupBtn"
             app:layout_constraintStart_toStartOf="@+id/popupWindowMain"
             app:layout_constraintBottom_toBottomOf="@+id/popupWindowMain"
             app:layout_constraintHorizontal_bias="0.05">
 
         </Button>
         <Button
-            android:id="@+id/popupCreateEvent"
+            android:id="@+id/popupBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/create_event"
+            android:text="Text"
+            style="@style/AppThemeMat"
             android:background="@color/colorPrimary"
             android:textColor="@color/colorBackWhite"
             android:textSize="24sp"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
             app:layout_constraintEnd_toEndOf="@+id/popupWindowMain"
             app:layout_constraintStart_toEndOf="@+id/popupCancel"
             app:layout_constraintBottom_toBottomOf="@+id/popupWindowMain"
