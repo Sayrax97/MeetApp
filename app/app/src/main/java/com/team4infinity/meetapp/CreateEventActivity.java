@@ -8,9 +8,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.location.Address;
 import android.location.Geocoder;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
@@ -19,6 +23,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.RadioGroup;
 import android.widget.TimePicker;
@@ -32,7 +37,11 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.jaredrummler.materialspinner.MaterialSpinner;
+import com.squareup.picasso.Picasso;
+import com.team4infinity.meetapp.adapters.GridViewImagesAdapter;
 import com.team4infinity.meetapp.models.CategoryList;
 import com.team4infinity.meetapp.models.Cities;
 import com.team4infinity.meetapp.models.Event;
@@ -40,6 +49,8 @@ import com.team4infinity.meetapp.models.User;
 
 import org.osmdroid.util.GeoPoint;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -51,6 +62,8 @@ public class CreateEventActivity extends AppCompatActivity {
     private static final String FIREBASE_CHILD_CAT = "categories";
     private static final String FIREBASE_CHILD_CIT = "cities";
     public static final String FIREBASE_CHILD="events";
+    private static final int SELECT_PICTURE = 5;
+    private static final int SELECT_PICTURE_GALLERY = 6;
     private FirebaseAuth auth;
     EditText title;
     EditText date;
@@ -64,12 +77,19 @@ public class CreateEventActivity extends AppCompatActivity {
     MaterialSpinner categoriesSpinner;
     ImageView dateImg;
     ImageView  timeImg;
+    ImageView coverImage;
+    Context that=this;
     //DatePickerDialog datePickerDialog;
     TimePickerDialog timePickerDialog;
-
     DatabaseReference database;
-
+    StorageReference storage;
     Event event;
+    Uri coverImageUri;
+    private String currEventkey;
+    private GridView gridView;
+    ArrayList<Uri> galleryImages;
+    GridViewImagesAdapter imagesAdapter;
+
     //endregion
 
     @Override
@@ -84,6 +104,7 @@ public class CreateEventActivity extends AppCompatActivity {
 
         auth=FirebaseAuth.getInstance();
         database= FirebaseDatabase.getInstance().getReference();
+        storage= FirebaseStorage.getInstance().getReference();
         title=findViewById(R.id.TitleCE);
         date=findViewById(R.id.DateCE);
         time=findViewById(R.id.TimeCE);
@@ -97,7 +118,24 @@ public class CreateEventActivity extends AppCompatActivity {
         dateImg=findViewById(R.id.DateImgCE);
         timeImg=findViewById(R.id.TimeImgCE);
 
+        //region CoverImage
+        coverImage=findViewById(R.id.AddCoverImg);
+        Picasso.with(that).load(R.drawable.pexels_photo_1190298).fit().into(coverImage);
+        coverImage.setOnClickListener(v -> {
+            pickImage(SELECT_PICTURE);
+        });
+        //endregion
 
+        galleryImages=new ArrayList<>();
+        galleryImages.add(Uri.parse("android.resource://com.team4infinity.meetapp/" + R.drawable.plus_blue));
+        gridView=findViewById(R.id.grid_create_event);
+        imagesAdapter=new GridViewImagesAdapter(galleryImages,this);
+        gridView.setOnItemClickListener((parent, view, position, id) -> {
+            if(position==0){
+                pickImage(SELECT_PICTURE_GALLERY);
+            }
+        });
+        gridView.setAdapter(imagesAdapter);
         event=new Event();
         //endregion
 
@@ -108,15 +146,6 @@ public class CreateEventActivity extends AppCompatActivity {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     Singleton.getInstance().categories= dataSnapshot.getValue(CategoryList.class);
-    //                int br= 0;
-    //                for (String cat:cl.categories) {
-    ////                    RadioButton rb=new RadioButton(CreateEventActivity.this);
-    ////                    rb.setId(br);
-    ////                    br++;
-    ////                    rb.setText(cat);
-    ////                    categoryRB.addView(rb);
-    //                    categoriesSpinner.
-    //                }
                     ArrayAdapter<String> adapter = new ArrayAdapter<>(CreateEventActivity.this,
                             android.R.layout.simple_spinner_item, getCategories());
                     adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -169,21 +198,18 @@ public class CreateEventActivity extends AppCompatActivity {
         //endregion
 
         //region DateDialog
-        dateImg.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Calendar calendar=Calendar.getInstance();
-                int year=calendar.get(Calendar.YEAR);
-                int month=calendar.get(Calendar.MONTH);
-                int day=calendar.get(Calendar.DAY_OF_MONTH);
-                 DatePickerDialog datePickerDialog=new DatePickerDialog(CreateEventActivity.this,new DatePickerDialog.OnDateSetListener() {
-                    @Override
-                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                        date.setText(year+"/"+(month+1)+"/"+dayOfMonth);
-                    }
-                }, year,month, day);
-                datePickerDialog.show();
-            }
+        dateImg.setOnClickListener(v -> {
+            Calendar calendar=Calendar.getInstance();
+            int year=calendar.get(Calendar.YEAR);
+            int month=calendar.get(Calendar.MONTH);
+            int day=calendar.get(Calendar.DAY_OF_MONTH);
+             DatePickerDialog datePickerDialog=new DatePickerDialog(CreateEventActivity.this,new DatePickerDialog.OnDateSetListener() {
+                @Override
+                public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                    date.setText(year+"/"+(month+1)+"/"+dayOfMonth);
+                }
+            }, year,month, day);
+            datePickerDialog.show();
         });
         //endregion
 
@@ -296,6 +322,8 @@ public class CreateEventActivity extends AppCompatActivity {
                 event.price=Double.parseDouble(price.getText().toString());
                 event.category =getCategories().get(categoriesSpinner.getSelectedIndex());
                 addNewEvent(event);
+                uploadImage();
+                uploadGallery();
                 Intent eventIntent=new Intent();
                 setResult(Activity.RESULT_OK, eventIntent);
                 finish();
@@ -308,6 +336,22 @@ public class CreateEventActivity extends AppCompatActivity {
         }
 
         return true;
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode==RESULT_OK){
+            if (requestCode==SELECT_PICTURE){
+                Picasso.with(that).load(data.getData()).resize(1000,1000).onlyScaleDown().centerInside().into(coverImage);
+                coverImageUri=data.getData();
+            }
+            else if(requestCode==SELECT_PICTURE_GALLERY){
+                galleryImages.add(data.getData());
+                imagesAdapter.notifyDataSetChanged();
+            }
+        }
     }
 
     public GeoPoint getLocationFromAddress(String strAddress) throws IOException {
@@ -360,9 +404,9 @@ public class CreateEventActivity extends AppCompatActivity {
     }
 
     public void addNewEvent(Event e){
-        String key=database.push().getKey();
-        database.child(FIREBASE_CHILD).child(key).setValue(event);
-        updateUser(key);
+        currEventkey=database.push().getKey();
+        database.child(FIREBASE_CHILD).child(currEventkey).setValue(event);
+        updateUser(currEventkey);
     }
 
     public void updateUser(String s){
@@ -372,5 +416,30 @@ public class CreateEventActivity extends AppCompatActivity {
         database.child("users").child(userID).child("createdEventsID").child(String.valueOf(user.createdEventsID.size())).setValue(s);
     }
 
+    private void pickImage(int type){
+        Intent i=new Intent();
+        i.setType("image/*");
+        i.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(i,"Select cover image"),type);
+    }
 
+    private void uploadImage(){
+        coverImage.setDrawingCacheEnabled(true);
+        coverImage.buildDrawingCache();
+        Bitmap bitmap = ((BitmapDrawable) coverImage.getDrawable()).getBitmap();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] data = baos.toByteArray();
+        storage.child(FIREBASE_CHILD).child(currEventkey).child("cover").child("cover").putBytes(data);
+    }
+
+    private void uploadGallery() {
+        int i=0;
+        for (Uri uri:galleryImages) {
+            if(i!=0){
+                storage.child(FIREBASE_CHILD).child(currEventkey).child(String.valueOf(i)).putFile(uri);
+            }
+            i++;
+        }
+    }
 }

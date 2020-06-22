@@ -165,7 +165,7 @@ public class CreateAccountActivity extends Activity {
         if(resultCode==RESULT_OK){
             if (requestCode==SELECT_PICTURE){
                 Toast.makeText(that, ""+data.getData(), Toast.LENGTH_LONG).show();
-                Picasso.with(CreateAccountActivity.this).load(data.getData()).resize(500,500).into(image);
+                Picasso.with(CreateAccountActivity.this).load(data.getData()).resize(500,500).onlyScaleDown().into(image);
                 imageUri=data.getData();
             }
         }
