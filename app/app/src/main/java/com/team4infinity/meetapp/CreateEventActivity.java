@@ -351,7 +351,7 @@ public class CreateEventActivity extends AppCompatActivity {
                 event.rating=0;
                 event.price=Double.parseDouble(price.getText().toString());
                 event.category =getCategories().get(categoriesSpinner.getSelectedIndex());
-                addNewEvent(event);
+                addNewEvent();
                 uploadImage();
                 uploadGallery();
                 Intent eventIntent=new Intent();
@@ -433,8 +433,9 @@ public class CreateEventActivity extends AppCompatActivity {
         return Singleton.getInstance().getCities();
     }
 
-    public void addNewEvent(Event e){
+    public void addNewEvent(){
         currEventkey=database.push().getKey();
+        event.setKey(currEventkey);
         database.child(FIREBASE_CHILD).child(currEventkey).setValue(event);
         updateUserCreatedEventID(currEventkey);
     }

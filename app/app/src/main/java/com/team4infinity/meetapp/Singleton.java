@@ -31,6 +31,7 @@ public class Singleton {
     Cities cities;
     User user;
     ArrayList<Event> events;
+    HashMap<String,Integer> eventKeyIndexer;
     private FirebaseAuth auth;
     private DatabaseReference database;
     private static final String FIREBASE_CHILD_CAT ="categories";
@@ -41,6 +42,7 @@ public class Singleton {
 
 
     public Singleton() {
+        eventKeyIndexer=new HashMap<>();
         categories=new CategoryList();
         cities=new Cities();
         events=new ArrayList<>();
@@ -147,6 +149,8 @@ public class Singleton {
     public void addNewCategory(String category){
         database.child(FIREBASE_CHILD_CAT).child(categories.categories.size()+"").setValue(category);
     }
-
+    public HashMap<String,Integer> getEventKeyIndexer(){
+        return eventKeyIndexer;
+    }
 
 }

@@ -406,6 +406,13 @@ public class MainActivity extends Activity {
                 item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
                 items.add(item);
                 Marker m= new Marker(map);
+                m.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
+                    @Override
+                    public boolean onMarkerClick(Marker marker, MapView mapView) {
+                        m.closeInfoWindow();
+                        return false;
+                    }
+                });
                 m.setTextLabelBackgroundColor(Color.TRANSPARENT);
                 m.setTextIcon(e.getTitle());
                 m.setPosition(new GeoPoint(e.lat,e.lon));
@@ -422,6 +429,9 @@ public class MainActivity extends Activity {
                     });
                     popUpBtn.setOnClickListener(v -> {
                         popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                        Intent intent=new Intent(that,EventActivity.class);
+                        intent.putExtra("key",getEvents().get(index).getKey());
+                        startActivity(intent);
                     });
 
                     try {
@@ -454,6 +464,7 @@ public class MainActivity extends Activity {
         return myLocationNewOverlay.getMyLocation();
 
     }
+
     private void showEventsInit(){
         final ArrayList<OverlayItem> items = new ArrayList<>();
         removeOverlays();
@@ -465,10 +476,18 @@ public class MainActivity extends Activity {
                 public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                     Event e=dataSnapshot.getValue(Event.class);
                     Singleton.getInstance().events.add(e);
+                    Singleton.getInstance().getEventKeyIndexer().put(e.getKey(),Singleton.getInstance().events.size()-1);
                     OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
                     item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
                     items.add(item);
                     Marker m= new Marker(map);
+                    m.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
+                        @Override
+                        public boolean onMarkerClick(Marker marker, MapView mapView) {
+                            m.closeInfoWindow();
+                            return false;
+                        }
+                    });
                     m.setTextLabelBackgroundColor(Color.TRANSPARENT);
                     m.setTextIcon(e.getTitle());
                     m.setPosition(new GeoPoint(e.lat,e.lon));
@@ -484,6 +503,9 @@ public class MainActivity extends Activity {
                             });
                             popUpBtn.setOnClickListener(v -> {
                                 popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                                Intent intent=new Intent(that,EventActivity.class);
+                                intent.putExtra("key",e.getKey());
+                                startActivity(intent);
                             });
 
                             try {
@@ -546,10 +568,17 @@ public class MainActivity extends Activity {
         for (Event e:getEvents()) {
             if(e.category.compareTo(category)==0)
             {
-                OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
+                OverlayItem item = new OverlayItem(e.title, e.key,new GeoPoint(e.lat,e.lon));
                 item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
                 items.add(item);
                 Marker m= new Marker(map);
+                m.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
+                @Override
+                public boolean onMarkerClick(Marker marker, MapView mapView) {
+                    m.closeInfoWindow();
+                    return false;
+                }
+            });
                 m.setTextLabelBackgroundColor(Color.TRANSPARENT);
                 m.setTextIcon(e.getTitle());
                 m.setPosition(new GeoPoint(e.lat,e.lon));
@@ -561,12 +590,16 @@ public class MainActivity extends Activity {
             public boolean onItemSingleTapUp(int index, OverlayItem item) {
                 Address address;
                 IGeoPoint p = item.getPoint();
-                popUpBtn.setText("View Event");
+                popUpBtn.setText(R.string.view_event);
                 cancelBtn.setOnClickListener(v -> {
                     popUpConstraintLayout.setVisibility(View.INVISIBLE);
+
                 });
                 popUpBtn.setOnClickListener(v -> {
                     popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                    Intent intent=new Intent(that,EventActivity.class);
+                    intent.putExtra("key",item.getSnippet());
+                    startActivity(intent);
                 });
 
                 try {

@@ -12,6 +12,7 @@ public class Event {
     public double lon;
     public double rating;
     public double price;
+    public String key;
     public int maxOccupancy;
     public ArrayList<String> galleryURIs=new ArrayList<>();
     public ArrayList<String> attendeesID=new ArrayList<>();
@@ -31,6 +32,14 @@ public class Event {
         this.rating = rating;
         this.price = price;
         this.maxOccupancy = maxOccupancy;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public String getTitle() {

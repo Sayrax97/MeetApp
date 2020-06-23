@@ -91,4 +91,9 @@
     <string name="sunday">Sunday</string>
     <string name="enter_event_name">Enter event name</string>
     <string name="cancel">Cancel</string>
+    <string name="days">Days</string>
+    <string name="hours">Hours</string>
+    <string name="minutes">Minutes</string>
+    <string name="seconds">Seconds</string>
+    <string name="view_event">View Event</string>
 </resources>
