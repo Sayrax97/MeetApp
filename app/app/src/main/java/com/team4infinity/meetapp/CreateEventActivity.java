@@ -12,14 +12,21 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ImageSpan;
+import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -61,9 +68,11 @@ public class CreateEventActivity extends AppCompatActivity {
     //region Members
     private static final String FIREBASE_CHILD_CAT = "categories";
     private static final String FIREBASE_CHILD_CIT = "cities";
+    private static final String FIREBASE_CHILD_USER = "users";
     public static final String FIREBASE_CHILD="events";
     private static final int SELECT_PICTURE = 5;
     private static final int SELECT_PICTURE_GALLERY = 6;
+    private static final String TAG = "CreateEventActivity";
     private FirebaseAuth auth;
     EditText title;
     EditText date;
@@ -126,16 +135,29 @@ public class CreateEventActivity extends AppCompatActivity {
         });
         //endregion
 
+        //region Gallery
         galleryImages=new ArrayList<>();
         galleryImages.add(Uri.parse("android.resource://com.team4infinity.meetapp/" + R.drawable.plus_blue));
         gridView=findViewById(R.id.grid_create_event);
         imagesAdapter=new GridViewImagesAdapter(galleryImages,this);
+        gridView.setOnCreateContextMenuListener((menu, v, menuInfo) -> {
+            AdapterView.AdapterContextMenuInfo info= (AdapterView.AdapterContextMenuInfo) menuInfo;
+            Uri uri= galleryImages.get(info.position);
+            if(info.position>0)
+            menu.add(0,0,1,menuIconWithText(getDrawable(R.drawable.bin),"Delete image"));
+        });
         gridView.setOnItemClickListener((parent, view, position, id) -> {
             if(position==0){
                 pickImage(SELECT_PICTURE_GALLERY);
             }
         });
+        gridView.setOnItemLongClickListener((parent, view, position, id) -> {
+
+            return false;
+        });
         gridView.setAdapter(imagesAdapter);
+        //endregion
+
         event=new Event();
         //endregion
 
@@ -214,24 +236,21 @@ public class CreateEventActivity extends AppCompatActivity {
         //endregion
 
         //region TimeDialog
-        timeImg.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                timePickerDialog=new TimePickerDialog(CreateEventActivity.this, new TimePickerDialog.OnTimeSetListener() {
-                    @Override
-                    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-                        if(hourOfDay<10&&minute<10)
-                            time.setText("0"+hourOfDay+":0"+minute);
-                        else if(hourOfDay<10)
-                            time.setText("0"+hourOfDay+":"+minute);
-                        else if(minute<10)
-                            time.setText(hourOfDay+":0"+minute);
-                        else
-                            time.setText(hourOfDay+":"+minute);
-                    }
-                },0,0,true);
-                timePickerDialog.show();
-            }
+        timeImg.setOnClickListener(v -> {
+            timePickerDialog=new TimePickerDialog(CreateEventActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                @Override
+                public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                    if(hourOfDay<10&&minute<10)
+                        time.setText("0"+hourOfDay+":0"+minute);
+                    else if(hourOfDay<10)
+                        time.setText("0"+hourOfDay+":"+minute);
+                    else if(minute<10)
+                        time.setText(hourOfDay+":0"+minute);
+                    else
+                        time.setText(hourOfDay+":"+minute);
+                }
+            },0,0,true);
+            timePickerDialog.show();
         });
         //endregion
 
@@ -251,6 +270,17 @@ public class CreateEventActivity extends AppCompatActivity {
 
 
 
+    }
+
+    @Override
+    public boolean onContextItemSelected(@NonNull MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info= (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        if(item.getItemId()==0){
+            galleryImages.remove(info.position);
+            imagesAdapter.notifyDataSetChanged();
+            Log.d(TAG, "onContextItemSelected: "+galleryImages.size());
+        }
+        return super.onContextItemSelected(item);
     }
 
     @Override
@@ -406,14 +436,24 @@ public class CreateEventActivity extends AppCompatActivity {
     public void addNewEvent(Event e){
         currEventkey=database.push().getKey();
         database.child(FIREBASE_CHILD).child(currEventkey).setValue(event);
-        updateUser(currEventkey);
+        updateUserCreatedEventID(currEventkey);
     }
 
-    public void updateUser(String s){
+    public void updateUserCreatedEventID(String s){
         FirebaseUser userFB= auth.getCurrentUser();
         String userID=userFB.getUid();
-        User user=new User();
-        database.child("users").child(userID).child("createdEventsID").child(String.valueOf(user.createdEventsID.size())).setValue(s);
+        database.child(FIREBASE_CHILD_USER).child(userID).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                User user=dataSnapshot.getValue(User.class);
+                database.child(FIREBASE_CHILD_USER).child(userID).child("createdEventsID").child(String.valueOf(user.createdEventsID.size())).setValue(s);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void pickImage(int type){
@@ -441,5 +481,15 @@ public class CreateEventActivity extends AppCompatActivity {
             }
             i++;
         }
+    }
+
+    private CharSequence menuIconWithText(Drawable r, String title) {
+
+        r.setBounds(0, 0, 50,50);
+        SpannableString sb = new SpannableString("    " + title);
+        ImageSpan imageSpan = new ImageSpan(r, ImageSpan.ALIGN_BOTTOM);
+        sb.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        return sb;
     }
 }
