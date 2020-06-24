@@ -3,6 +3,7 @@ package com.team4infinity.meetapp;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 
 import android.content.Context;
 import android.content.Intent;
@@ -13,7 +14,10 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,8 +46,9 @@ public class EventActivity extends AppCompatActivity {
     //region Members
     private Event event;
     private Context that=this;
-    private TextView eAddressTextView,eDateTextView,eRatingTextView,eDaysLeftTextView,eHoursLeftTextView,eMinutesLeftTextView,eSecondsLeftTextView;
-    private ImageView coverImage;
+    private TextView eAddressTextView,eDateTextView,eRatingTextView,eDaysLeftTextView,eHoursLeftTextView,eMinutesLeftTextView,eSecondsLeftTextView,eDescriptionTextView,eSpecReqTextView,galleryViewAllTextView;
+    private ImageView coverImage,expandImage;
+    private LinearLayout galleryHorizontalScrollView;
     private StorageReference storage;
     //endregion
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -60,6 +65,11 @@ public class EventActivity extends AppCompatActivity {
         eHoursLeftTextView=findViewById(R.id.event_time_left_hours);
         eMinutesLeftTextView=findViewById(R.id.event_time_left_minutes);
         eSecondsLeftTextView=findViewById(R.id.event_time_left_seconds);
+        expandImage=findViewById(R.id.expand_image);
+        eDescriptionTextView=findViewById(R.id.event_description);
+        eSpecReqTextView=findViewById(R.id.event_spec_req);
+        galleryViewAllTextView=findViewById(R.id.gallery_view_all);
+        galleryHorizontalScrollView=findViewById(R.id.gallery_hsv);
         storage= FirebaseStorage.getInstance().getReference();
         //endregion
 
@@ -93,6 +103,7 @@ public class EventActivity extends AppCompatActivity {
         //endregion
 
 
+        //region Countdown
         Runnable helloRunnable = () -> {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm");
             try {
@@ -125,8 +136,24 @@ public class EventActivity extends AppCompatActivity {
         };
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.scheduleAtFixedRate(helloRunnable, 0, 1, TimeUnit.SECONDS);
+        //endregion
 
+        expandImage.setOnClickListener(v -> {
+            TextView textView=findViewById(R.id.txv_spec_req);
+            if(textView.getVisibility()==View.GONE &&eSpecReqTextView.getVisibility()==View.GONE){
+                textView.setVisibility(View.VISIBLE);
+                eSpecReqTextView.setVisibility(View.VISIBLE);
+                eSpecReqTextView.setText(event.specialRequirement);
+                expandImage.setImageDrawable(getDrawable(R.drawable.ic_baseline_keyboard_arrow_up_24));
+            }
+            else {
+                textView.setVisibility(View.GONE);
+                eSpecReqTextView.setVisibility(View.GONE);
+                expandImage.setImageDrawable(getDrawable(R.drawable.ic_baseline_keyboard_arrow_down_24));
+            }
+        });
 
+        loadGallery();
     }
 
     @Override
@@ -138,5 +165,26 @@ public class EventActivity extends AppCompatActivity {
             }
         }
         return super.onOptionsItemSelected(item);
+    }
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void loadGallery()
+    {
+        storage.child(EVENT_CHILD).child(event.getKey()).listAll().addOnSuccessListener(listResult -> {
+            listResult.getItems().forEach(storageReference -> {
+                storageReference.getDownloadUrl().addOnSuccessListener(uri -> {
+                    //ImageView Setup
+                    ImageView imageView = new ImageView(this);
+
+                    //setting image resource
+                    Picasso.with(that).load(uri).resize(500,500).centerInside().into(imageView);
+
+                    //setting image position
+                    imageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT));
+                    galleryHorizontalScrollView.addView(imageView);
+                });
+
+            });
+        });
     }
 }

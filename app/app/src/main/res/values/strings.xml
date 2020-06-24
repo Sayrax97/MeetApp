@@ -32,7 +32,7 @@
     <string name="address">Address</string>
     <string name="city">City</string>
     <string name="description">Description</string>
-    <string name="price">Price</string>
+    <string name="price">Price: </string>
     <string name="category">Category</string>
     <string name="pick_category">Pick category</string>
     <string name="add_photos">Add photos to gallery</string>
@@ -96,4 +96,6 @@
     <string name="minutes">Minutes</string>
     <string name="seconds">Seconds</string>
     <string name="view_event">View Event</string>
+    <string name="count_me">Count me in</string>
+
 </resources>
