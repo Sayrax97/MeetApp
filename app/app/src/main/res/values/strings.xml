@@ -97,5 +97,7 @@
     <string name="seconds">Seconds</string>
     <string name="view_event">View Event</string>
     <string name="count_me">Count me in</string>
+    <string name="creator">You are the creator</string>
+    <string name="already_attendee">You are already an attendee</string>
 
 </resources>

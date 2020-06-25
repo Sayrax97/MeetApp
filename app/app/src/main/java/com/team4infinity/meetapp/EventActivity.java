@@ -3,53 +3,58 @@ package com.team4infinity.meetapp;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.HorizontalScrollView;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 import com.team4infinity.meetapp.models.Event;
+import com.team4infinity.meetapp.models.User;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class EventActivity extends AppCompatActivity {
-    private static final String EVENT_CHILD = "events";
-    private static final int ONE_MEGABYTE = 1024*1024;
+    private static final String FIREBASE_EVENT_CHILD = "events";
     private static final String TAG = "EventActivity";
+    private static final String FIREBASE_CHILD_USER ="users";
     //region Members
     private Event event;
     private Context that=this;
-    private TextView eAddressTextView,eDateTextView,eRatingTextView,eDaysLeftTextView,eHoursLeftTextView,eMinutesLeftTextView,eSecondsLeftTextView,eDescriptionTextView,eSpecReqTextView,galleryViewAllTextView;
+    private TextView eAddressTextView,eDateTextView,eRatingTextView,eDaysLeftTextView,eHoursLeftTextView,eMinutesLeftTextView,eSecondsLeftTextView,eDescriptionTextView,eSpecReqTextView,galleryViewAllTextView,ePriceTextView;
     private ImageView coverImage,expandImage;
-    private LinearLayout galleryHorizontalScrollView;
+    private Button eventButton;
+    private LinearLayout bottomSheetLinearLayout;
+    private LinearLayout galleryHorizontalScrollView, attendeesHorizontalScrollView;
     private StorageReference storage;
+    private FirebaseAuth auth;
+    private DatabaseReference database;
     //endregion
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -68,9 +73,16 @@ public class EventActivity extends AppCompatActivity {
         expandImage=findViewById(R.id.expand_image);
         eDescriptionTextView=findViewById(R.id.event_description);
         eSpecReqTextView=findViewById(R.id.event_spec_req);
+        ePriceTextView=findViewById(R.id.event_price);
+        eventButton=findViewById(R.id.event_button);
+        bottomSheetLinearLayout=findViewById(R.id.bottom_sheet);
+        BottomSheetBehavior bottomSheetBehavior=BottomSheetBehavior.from(bottomSheetLinearLayout);
         galleryViewAllTextView=findViewById(R.id.gallery_view_all);
         galleryHorizontalScrollView=findViewById(R.id.gallery_hsv);
+        attendeesHorizontalScrollView =findViewById(R.id.atendees_hsv);
         storage= FirebaseStorage.getInstance().getReference();
+        auth=FirebaseAuth.getInstance();
+        database= FirebaseDatabase.getInstance().getReference();
         //endregion
 
         //region GetEvent
@@ -89,19 +101,40 @@ public class EventActivity extends AppCompatActivity {
         }
         //endregion
 
+        //region SetText
         eAddressTextView.setText(event.getAddress());
         eDateTextView.setText(event.getDateTime());
         eRatingTextView.setText(String.valueOf(event.getRating()));
+        if(event.getPrice()>0)
+        ePriceTextView.setText(getText(R.string.price).toString()+" "+event.getPrice());
+        else {
+            ePriceTextView.setText(getText(R.string.price).toString()+" Free");
+        }
+        //endregion
 
         //region Cover image
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         int width = displayMetrics.widthPixels;
-        storage.child(EVENT_CHILD).child(eventkey).child("cover").child("cover").getDownloadUrl().addOnSuccessListener(uri -> {
+        storage.child(FIREBASE_EVENT_CHILD).child(eventkey).child("cover").child("cover").getDownloadUrl().addOnSuccessListener(uri -> {
             Picasso.with(that).load(uri).resize(width,width).centerCrop().into(coverImage);
         });
         //endregion
 
+        if(event.getCreatorID().compareTo(auth.getCurrentUser().getUid())==0){
+            eventButton.setEnabled(false);
+            eventButton.setText(R.string.creator);
+        }
+        else {
+            disableButtonIfAttendee();
+        }
+        eventButton.setOnClickListener(v -> {
+            updateUserAttendedEventsID(event.getKey());
+            updateEventAttendeesID(event.getKey());
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            event=Singleton.getInstance().getEvents().get(index);
+            loadAtendees();
+        });
 
         //region Countdown
         Runnable helloRunnable = () -> {
@@ -154,7 +187,11 @@ public class EventActivity extends AppCompatActivity {
         });
 
         loadGallery();
+
+        loadAtendees();
     }
+
+
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -167,9 +204,8 @@ public class EventActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void loadGallery()
-    {
-        storage.child(EVENT_CHILD).child(event.getKey()).listAll().addOnSuccessListener(listResult -> {
+    private void loadGallery() {
+        storage.child(FIREBASE_EVENT_CHILD).child(event.getKey()).listAll().addOnSuccessListener(listResult -> {
             listResult.getItems().forEach(storageReference -> {
                 storageReference.getDownloadUrl().addOnSuccessListener(uri -> {
                     //ImageView Setup
@@ -180,11 +216,66 @@ public class EventActivity extends AppCompatActivity {
 
                     //setting image position
                     imageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT));
+                            LinearLayout.LayoutParams.MATCH_PARENT));
                     galleryHorizontalScrollView.addView(imageView);
                 });
 
             });
+        });
+    }
+    public void updateUserAttendedEventsID(String s){
+        FirebaseUser userFB= auth.getCurrentUser();
+        String userID=userFB.getUid();
+        database.child(FIREBASE_CHILD_USER).child(userID).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                User user=dataSnapshot.getValue(User.class);
+                database.child(FIREBASE_CHILD_USER).child(userID).child("attendedEventsID").child(String.valueOf(user.createdEventsID.size())).setValue(s);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+    private void updateEventAttendeesID(String key) {
+        String uid=auth.getCurrentUser().getUid();
+        database.child(FIREBASE_EVENT_CHILD).child(key).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Event event=dataSnapshot.getValue(Event.class);
+                database.child(FIREBASE_EVENT_CHILD).child(key).child("attendeesID").child(String.valueOf(event.getAttendeesID().size())).setValue(uid);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void loadAtendees() {
+        attendeesHorizontalScrollView.removeAllViews();
+        event.getAttendeesID().forEach(uid -> {
+            Log.d(TAG, "loadAtendees: "+uid);
+            storage.child(FIREBASE_CHILD_USER).child(uid).child("profile").getDownloadUrl().addOnSuccessListener(uri -> {
+                CircleImageView imageView = new CircleImageView(this);
+                Picasso.with(that).load(uri).resize(500,500).centerInside().into(imageView);
+                imageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT));
+                attendeesHorizontalScrollView.addView(imageView);
+            });
+
+        });
+    }
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void disableButtonIfAttendee(){
+        event.getAttendeesID().forEach(uid -> {
+            if(uid.compareTo(auth.getCurrentUser().getUid())==0){
+                eventButton.setEnabled(false);
+                eventButton.setText(R.string.already_attendee);
+            }
         });
     }
 }

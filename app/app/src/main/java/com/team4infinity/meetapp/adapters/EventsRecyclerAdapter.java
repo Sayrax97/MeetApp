@@ -1,6 +1,7 @@
 package com.team4infinity.meetapp.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,7 @@ import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.squareup.picasso.Picasso;
+import com.team4infinity.meetapp.EventActivity;
 import com.team4infinity.meetapp.R;
 import com.team4infinity.meetapp.models.Event;
 
@@ -51,7 +53,10 @@ public class EventsRecyclerAdapter extends RecyclerView.Adapter<EventsRecyclerAd
         holder.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(ctx, "Card with title: "+events.get(position).title+" Clicked!", Toast.LENGTH_SHORT).show();
+                Event clickedEvent = events.get(position);
+                Intent intent=new Intent(ctx, EventActivity.class);
+                intent.putExtra("key",clickedEvent.getKey());
+                ctx.startActivity(intent);
             }
         });
     }

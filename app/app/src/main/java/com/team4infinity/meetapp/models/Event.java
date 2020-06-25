@@ -14,14 +14,14 @@ public class Event {
     public double price;
     public String key;
     public int maxOccupancy;
-    public ArrayList<String> galleryURIs=new ArrayList<>();
+    public String creatorID;
     public ArrayList<String> attendeesID=new ArrayList<>();
     public String category;
 
     public Event() {
     }
 
-    public Event(String title, String description, String address, String dateTime, String specialRequirement, double lat, double lon, double rating, double price, int maxOccupancy) {
+    public Event(String title, String description, String address, String dateTime, String specialRequirement, double lat, double lon, double rating, double price, int maxOccupancy,String creatorID) {
         this.title = title;
         this.description = description;
         this.address = address;
@@ -32,6 +32,16 @@ public class Event {
         this.rating = rating;
         this.price = price;
         this.maxOccupancy = maxOccupancy;
+        this.creatorID=creatorID;
+    }
+
+
+    public String getCreatorID() {
+        return creatorID;
+    }
+
+    public void setCreatorID(String creatorID) {
+        this.creatorID = creatorID;
     }
 
     public String getKey() {
@@ -120,14 +130,6 @@ public class Event {
 
     public void setMaxOccupancy(int maxOccupancy) {
         this.maxOccupancy = maxOccupancy;
-    }
-
-    public ArrayList<String> getGalleryURIs() {
-        return galleryURIs;
-    }
-
-    public void setGalleryURIs(ArrayList<String> galleryURIs) {
-        this.galleryURIs = galleryURIs;
     }
 
     public ArrayList<String> getAttendeesID() {

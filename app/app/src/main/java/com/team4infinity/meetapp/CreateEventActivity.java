@@ -351,6 +351,11 @@ public class CreateEventActivity extends AppCompatActivity {
                 event.rating=0;
                 event.price=Double.parseDouble(price.getText().toString());
                 event.category =getCategories().get(categoriesSpinner.getSelectedIndex());
+                event.setCreatorID(auth.getCurrentUser().getUid());
+                if(event.getAttendeesID()==null){
+                    event.attendeesID=new ArrayList<>();
+                }
+                event.attendeesID.add(auth.getCurrentUser().getUid());
                 addNewEvent();
                 uploadImage();
                 uploadGallery();
@@ -436,6 +441,7 @@ public class CreateEventActivity extends AppCompatActivity {
     public void addNewEvent(){
         currEventkey=database.push().getKey();
         event.setKey(currEventkey);
+        updateUserAttendedEventsID(currEventkey);
         database.child(FIREBASE_CHILD).child(currEventkey).setValue(event);
         updateUserCreatedEventID(currEventkey);
     }
@@ -492,5 +498,21 @@ public class CreateEventActivity extends AppCompatActivity {
         sb.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         return sb;
+    }
+    public void updateUserAttendedEventsID(String s){
+        FirebaseUser userFB= auth.getCurrentUser();
+        String userID=userFB.getUid();
+        database.child(FIREBASE_CHILD_USER).child(userID).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                User user=dataSnapshot.getValue(User.class);
+                database.child(FIREBASE_CHILD_USER).child(userID).child("attendedEventsID").child(String.valueOf(user.createdEventsID.size())).setValue(s);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 }
