@@ -16,6 +16,7 @@ public class Event {
     public int maxOccupancy;
     public String creatorID;
     public ArrayList<String> attendeesID=new ArrayList<>();
+    public ArrayList<String> ratedByID=new ArrayList<>();
     public String category;
 
     public Event() {
@@ -35,6 +36,13 @@ public class Event {
         this.creatorID=creatorID;
     }
 
+    public ArrayList<String> getRatedByID() {
+        return ratedByID;
+    }
+
+    public void setRatedByID(ArrayList<String> ratedByID) {
+        this.ratedByID = ratedByID;
+    }
 
     public String getCreatorID() {
         return creatorID;

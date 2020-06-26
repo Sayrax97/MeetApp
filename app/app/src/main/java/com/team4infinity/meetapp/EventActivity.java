@@ -16,7 +16,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.auth.FirebaseAuth;
@@ -51,8 +53,8 @@ public class EventActivity extends AppCompatActivity {
     private TextView eAddressTextView,eDateTextView,eRatingTextView,eDaysLeftTextView,eHoursLeftTextView,eMinutesLeftTextView,eSecondsLeftTextView,eCreatorTextView,eDescriptionTextView,eSpecReqTextView,galleryViewAllTextView,ePriceTextView,eOccupancyTextView;
     private ImageView coverImage,expandImage;
     private Button eventButton;
-    private LinearLayout bottomSheetLinearLayout;
-    private LinearLayout galleryHorizontalScrollView, attendeesHorizontalScrollView;
+    private LinearLayout galleryHorizontalScrollView, attendeesHorizontalScrollView,bottomSheetLinearLayout;
+    private RatingBar ratingBar;
     private StorageReference storage;
     private FirebaseAuth auth;
     private DatabaseReference database;
@@ -73,6 +75,7 @@ public class EventActivity extends AppCompatActivity {
         eMinutesLeftTextView=findViewById(R.id.event_time_left_minutes);
         eSecondsLeftTextView=findViewById(R.id.event_time_left_seconds);
         expandImage=findViewById(R.id.expand_image);
+        ratingBar=findViewById(R.id.event_rating_stars);
         eDescriptionTextView=findViewById(R.id.event_description);
         eCreatorTextView=findViewById(R.id.event_creator);
         eSpecReqTextView=findViewById(R.id.event_spec_req);
@@ -118,6 +121,7 @@ public class EventActivity extends AppCompatActivity {
         if(Singleton.getInstance().getUser().uID.compareTo(event.getCreatorID())==0){
             eCreatorTextView.setText(Singleton.getInstance().getUser().firstName+" "+Singleton.getInstance().getUser().lastName);
         }
+        else
         database.child(FIREBASE_CHILD_USER).child(event.getCreatorID()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -130,6 +134,8 @@ public class EventActivity extends AppCompatActivity {
 
             }
         });
+
+
         //endregion
 
         //region Cover image
@@ -158,6 +164,52 @@ public class EventActivity extends AppCompatActivity {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             event=Singleton.getInstance().getEvents().get(index);
             loadAtendees();
+        });
+
+        ratingBar.setRating((float) event.rating);
+        ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
+            if(fromUser){
+                String userId=auth.getCurrentUser().getUid();
+                database.child(FIREBASE_CHILD_USER).child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        User u=dataSnapshot.getValue(User.class);
+                        for (String s : u.ratedEventsID) {
+                            if(s.compareTo(event.key)==0){
+                                Toast.makeText(that, "You already rated this event", Toast.LENGTH_SHORT).show();
+                                ratingBar.setRating((float) event.rating);
+                                return;
+                            }
+                        }
+                        database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("ratedEventsID").child(""+u.ratedEventsID.size()).setValue(event.getKey());
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+
+
+                database.child(FIREBASE_EVENT_CHILD).child(event.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        Event e=dataSnapshot.getValue(Event.class);
+                        double newRating=e.rating*e.ratedByID.size();
+                        newRating+=rating;
+                        newRating/=(e.ratedByID.size()+1);
+                        database.child(FIREBASE_EVENT_CHILD).child(event.getKey()).child("rating").setValue(newRating);
+                        database.child(FIREBASE_EVENT_CHILD).child(event.getKey()).child("ratedByID").child(e.getRatedByID().size()+"").setValue(userId);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+
+                //database.child(FIREBASE_EVENT_CHILD).child(event.getKey()).child("rating").setValue();
+            }
         });
 
         //region Countdown
