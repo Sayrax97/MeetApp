@@ -97,7 +97,7 @@
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_gravity="center"
-                    android:src="@drawable/star_full"
+                    android:src="@drawable/ic_baseline_star_24"
                     android:tint="@color/colorBlack"/>
 
                 <TextView

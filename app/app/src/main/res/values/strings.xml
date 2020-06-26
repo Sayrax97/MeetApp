@@ -99,5 +99,7 @@
     <string name="count_me">Count me in</string>
     <string name="creator">You are the creator</string>
     <string name="already_attendee">You are already an attendee</string>
+    <string name="event_full">Event Full</string>
+    <string name="event_creator">Event Creator</string>
 
 </resources>

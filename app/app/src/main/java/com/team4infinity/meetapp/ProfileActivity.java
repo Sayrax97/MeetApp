@@ -59,6 +59,10 @@ public class ProfileActivity extends AppCompatActivity {
         createdEvents.setText(String.valueOf(getUser().createdEventsID.size()));
         ratedEvents.setText(String.valueOf(getUser().ratedEventsID.size()));
         attendedEvents.setText(String.valueOf(getUser().attendedEventsID.size()));
+        fullName.setText(getUser().FullName());
+        email.setText(getUser().email);
+        gender.setText(getUser().gender);
+        date.setText(getUser().birthDate);
         storage=FirebaseStorage.getInstance().getReference();
         database=FirebaseDatabase.getInstance().getReference();
         auth=FirebaseAuth.getInstance();
@@ -81,21 +85,21 @@ public class ProfileActivity extends AppCompatActivity {
         //endregion
 
         //region Database
-        database.child("users").child(getUser().uID).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                User user_data=dataSnapshot.getValue(User.class);
-                fullName.setText(user_data.FullName());
-                email.setText(user_data.email);
-                gender.setText(user_data.gender);
-                date.setText(user_data.birthDate);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
+//        database.child("users").child(getUser().uID).addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                User user_data=dataSnapshot.getValue(User.class);
+//                fullName.setText(user_data.FullName());
+//                email.setText(user_data.email);
+//                gender.setText(user_data.gender);
+//                date.setText(user_data.birthDate);
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
         //endregion
     }
 

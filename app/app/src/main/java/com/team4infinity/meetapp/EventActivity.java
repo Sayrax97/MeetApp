@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -47,7 +48,7 @@ public class EventActivity extends AppCompatActivity {
     //region Members
     private Event event;
     private Context that=this;
-    private TextView eAddressTextView,eDateTextView,eRatingTextView,eDaysLeftTextView,eHoursLeftTextView,eMinutesLeftTextView,eSecondsLeftTextView,eDescriptionTextView,eSpecReqTextView,galleryViewAllTextView,ePriceTextView;
+    private TextView eAddressTextView,eDateTextView,eRatingTextView,eDaysLeftTextView,eHoursLeftTextView,eMinutesLeftTextView,eSecondsLeftTextView,eCreatorTextView,eDescriptionTextView,eSpecReqTextView,galleryViewAllTextView,ePriceTextView,eOccupancyTextView;
     private ImageView coverImage,expandImage;
     private Button eventButton;
     private LinearLayout bottomSheetLinearLayout;
@@ -56,6 +57,7 @@ public class EventActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     private DatabaseReference database;
     //endregion
+    @SuppressLint("SetTextI18n")
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,9 +74,11 @@ public class EventActivity extends AppCompatActivity {
         eSecondsLeftTextView=findViewById(R.id.event_time_left_seconds);
         expandImage=findViewById(R.id.expand_image);
         eDescriptionTextView=findViewById(R.id.event_description);
+        eCreatorTextView=findViewById(R.id.event_creator);
         eSpecReqTextView=findViewById(R.id.event_spec_req);
         ePriceTextView=findViewById(R.id.event_price);
         eventButton=findViewById(R.id.event_button);
+        eOccupancyTextView=findViewById(R.id.event_occupancy);
         bottomSheetLinearLayout=findViewById(R.id.bottom_sheet);
         BottomSheetBehavior bottomSheetBehavior=BottomSheetBehavior.from(bottomSheetLinearLayout);
         galleryViewAllTextView=findViewById(R.id.gallery_view_all);
@@ -110,6 +114,22 @@ public class EventActivity extends AppCompatActivity {
         else {
             ePriceTextView.setText(getText(R.string.price).toString()+" Free");
         }
+        eOccupancyTextView.setText(getText(R.string.occupancy)+" "+event.attendeesID.size()+"/"+event.getMaxOccupancy());
+        if(Singleton.getInstance().getUser().uID.compareTo(event.getCreatorID())==0){
+            eCreatorTextView.setText(Singleton.getInstance().getUser().firstName+" "+Singleton.getInstance().getUser().lastName);
+        }
+        database.child(FIREBASE_CHILD_USER).child(event.getCreatorID()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                User user=dataSnapshot.getValue(User.class);
+                eCreatorTextView.setText(user.firstName+" "+user.lastName);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
         //endregion
 
         //region Cover image
@@ -124,6 +144,10 @@ public class EventActivity extends AppCompatActivity {
         if(event.getCreatorID().compareTo(auth.getCurrentUser().getUid())==0){
             eventButton.setEnabled(false);
             eventButton.setText(R.string.creator);
+        }
+        else if(event.getMaxOccupancy()==event.attendeesID.size()){
+            eventButton.setEnabled(false);
+            eventButton.setText(R.string.event_full);
         }
         else {
             disableButtonIfAttendee();
