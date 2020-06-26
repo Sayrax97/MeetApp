@@ -1,6 +1,7 @@
 package com.team4infinity.meetapp;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.menu.MenuBuilder;
@@ -25,6 +26,9 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.team4infinity.meetapp.adapters.EventsRecyclerAdapter;
 import com.team4infinity.meetapp.models.Event;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -32,6 +36,7 @@ import java.util.Comparator;
 public class EventsActivity extends AppCompatActivity {
 
     //region Class Members
+    private static final int FILTER_ACTIVITY_REQUEST_CODE = 0;
     private static final String TAG = "EventsActivity";
     private BottomNavigationView bottomNav;
     private Context that=this;
@@ -110,14 +115,14 @@ public class EventsActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
             case 0:{
-                startActivity(new Intent(this,FilterActivity.class));
+                startActivityForResult(new Intent(this,FilterActivity.class),FILTER_ACTIVITY_REQUEST_CODE);
                 break;
             }
             case 2:{
                 Toast.makeText(that, "Ascending clicked", Toast.LENGTH_SHORT).show();
                 if(!item.isChecked())
                 {
-                    sortOrder=item.getTitle().toString();
+                    sortOrder=item.getTitle().toString().trim();
                     Toast.makeText(that, "sort order: "+sortOrder, Toast.LENGTH_SHORT).show();
                     Collections.reverse(events);
                     item.setChecked(true);
@@ -127,7 +132,7 @@ public class EventsActivity extends AppCompatActivity {
             case 3:{
                 Toast.makeText(that, "Descending clicked", Toast.LENGTH_SHORT).show();
                 if(!item.isChecked()) {
-                    sortOrder = item.getTitle().toString();
+                    sortOrder = item.getTitle().toString().trim();
                     Toast.makeText(that, "sort order: "+sortOrder, Toast.LENGTH_SHORT).show();
                     Collections.reverse(events);
                     item.setChecked(true);
@@ -214,6 +219,21 @@ public class EventsActivity extends AppCompatActivity {
                 return (int)(s.rating - t.rating);
             else
                 return 0;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==FILTER_ACTIVITY_REQUEST_CODE){
+            if(resultCode==RESULT_OK){
+                try {
+                    JSONObject filterParams=new JSONObject(data.getStringExtra("sendBack"));
+                    System.out.println(filterParams.toString());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }
