@@ -38,26 +38,23 @@ public class EventsRecyclerAdapter extends RecyclerView.Adapter<EventsRecyclerAd
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder,int position) {
         Picasso.with(ctx).load(R.drawable.pexels_photo_1190298).fit().into(holder.eventImage);
         holder.eventTitle.setText(events.get(position).title);
         holder.eventAddress.setText(events.get(position).address);
         holder.eventDate.setText(events.get(position).dateTime);
-        holder.eventAttendees.setText("1");
+        holder.eventAttendees.setText(events.get(position).getAttendeesID().size()+"");
         holder.bookmarkImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(ctx, "Bookmark clicked on pos: "+position, Toast.LENGTH_SHORT).show();
+                Toast.makeText(ctx, "Bookmark clicked on pos: " + position, Toast.LENGTH_SHORT).show();
             }
         });
-        holder.cardView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Event clickedEvent = events.get(position);
-                Intent intent=new Intent(ctx, EventActivity.class);
-                intent.putExtra("key",clickedEvent.getKey());
-                ctx.startActivity(intent);
-            }
+        holder.cardView.setOnClickListener(v -> {
+            Toast.makeText(ctx, ""+events.get(position).getTitle(), Toast.LENGTH_SHORT).show();
+            Intent intent=new Intent(ctx, EventActivity.class);
+            intent.putExtra("key",events.get(position).getKey());
+            ctx.startActivity(intent);
         });
     }
 

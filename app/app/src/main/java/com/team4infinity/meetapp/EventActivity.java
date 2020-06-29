@@ -238,7 +238,7 @@ public class EventActivity extends AppCompatActivity {
                     eHoursLeftTextView.setText(String.valueOf(0));
                     eMinutesLeftTextView.setText(String.valueOf(0));
                     eSecondsLeftTextView.setText(String.valueOf(0));
-
+                    
                 }
 
             } catch (ParseException e) {
