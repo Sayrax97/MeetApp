@@ -67,7 +67,7 @@ public class ProfileActivity extends AppCompatActivity {
         database=FirebaseDatabase.getInstance().getReference();
         auth=FirebaseAuth.getInstance();
         //endregion
-
+        Toast.makeText(this, ""+getUser().uID, Toast.LENGTH_SHORT).show();
         //region Storage
         storage.child("users").child(getUser().uID).child("profile").getDownloadUrl().addOnSuccessListener(uri -> {
             Picasso.with(this).load(uri).fit().into(profileImage);

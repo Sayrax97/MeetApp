@@ -475,8 +475,9 @@ public class MainActivity extends Activity {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                     Event e=dataSnapshot.getValue(Event.class);
-                    Singleton.getInstance().events.add(e);
-                    Singleton.getInstance().getEventKeyIndexer().put(e.getKey(),Singleton.getInstance().events.size()-1);
+                    if (!Singleton.getInstance().getEventKeyIndexer().containsKey(e.key))
+                        {Singleton.getInstance().events.add(e);
+                        Singleton.getInstance().getEventKeyIndexer().put(e.getKey(),Singleton.getInstance().events.size()-1);}
                     OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
                     item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
                     items.add(item);
@@ -536,12 +537,17 @@ public class MainActivity extends Activity {
 
                 @Override
                 public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
+                    Event event=dataSnapshot.getValue(Event.class);
+                    int index=Singleton.getInstance().getEventKeyIndexer().get(event.key);
+                    getEvents().set(index,event);
                 }
 
                 @Override
                 public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
+                    Event event=dataSnapshot.getValue(Event.class);
+                    int index=Singleton.getInstance().getEventKeyIndexer().get(event.key);
+                    getEvents().remove(index);
+                    Singleton.getInstance().resetEventKeyIndexer();
                 }
 
                 @Override

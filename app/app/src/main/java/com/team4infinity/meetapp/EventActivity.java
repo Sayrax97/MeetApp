@@ -147,6 +147,7 @@ public class EventActivity extends AppCompatActivity {
         });
         //endregion
 
+        //region EventButton
         if(event.getCreatorID().compareTo(auth.getCurrentUser().getUid())==0){
             eventButton.setEnabled(false);
             eventButton.setText(R.string.creator);
@@ -165,6 +166,7 @@ public class EventActivity extends AppCompatActivity {
             event=Singleton.getInstance().getEvents().get(index);
             loadAtendees();
         });
+        //endregion
 
         ratingBar.setRating((float) event.rating);
         ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {

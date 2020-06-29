@@ -84,43 +84,42 @@ public class Singleton {
 
             }
         });
-//        database.child(FIREBASE_CHILD_EVENT).addChildEventListener(new ChildEventListener() {
-//            @Override
-//            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-//                events.add(dataSnapshot.getValue(Event.class));
-//            }
-//
-//            @Override
-//            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-//
-//            }
-//
-//            @Override
-//            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-//
-//            }
-//
-//            @Override
-//            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//            }
-//        });
-//        database.child(FIREBASE_CHILD_EVENT).addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//            }
-//        });
+        database.child(FIREBASE_CHILD_EVENT).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Event event=dataSnapshot.getValue(Event.class);
+                if (!eventKeyIndexer.containsKey(event.key))
+                    {
+                        events.add(event);
+                        eventKeyIndexer.put(event.getKey(),events.size()-1);
+                    }
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Event event=dataSnapshot.getValue(Event.class);
+                int index=eventKeyIndexer.get(event.key);
+                events.set(index,event);
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+                Event event=dataSnapshot.getValue(Event.class);
+                int index=eventKeyIndexer.get(event.key);
+                events.remove(index);
+                resetEventKeyIndexer();
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
 
     }
 
@@ -151,6 +150,12 @@ public class Singleton {
     }
     public HashMap<String,Integer> getEventKeyIndexer(){
         return eventKeyIndexer;
+    }
+    public void resetEventKeyIndexer(){
+        eventKeyIndexer=new HashMap<>();
+        for (int index=0;index<events.size();index++){
+            eventKeyIndexer.put(events.get(index).getKey(),index);
+        }
     }
 
 }
