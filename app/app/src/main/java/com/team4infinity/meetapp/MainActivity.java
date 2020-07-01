@@ -3,6 +3,7 @@ package com.team4infinity.meetapp;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -108,7 +109,7 @@ public class MainActivity extends Activity {
     private IMapController mapController=null;
     private MyLocationNewOverlay myLocationNewOverlay;
     private ChipGroup chipGroup;
-    private FloatingActionButton fabPointer,fabAdd;
+    private FloatingActionButton fabPointer,fabAdd,fabService;
     private TextView popupTextView1,popupTextView2,popUpTextView3;
     private MaterialButton cancelBtn;
     private MaterialButton popUpBtn;
@@ -116,11 +117,9 @@ public class MainActivity extends Activity {
     private BottomNavigationView bottomNav;
     private CardView popUpCardView;
     private SearchView searchView;
-//    private AutoCompleteTextView autoCompleteTextView;
     private DatabaseReference database;
     private StorageReference storage;
     private ItemizedIconOverlay eventsOverlay;
-    MapEventsReceiver mapEventsReceiver;
     //endregion
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -141,7 +140,6 @@ public class MainActivity extends Activity {
         popupBookmarkImageView=findViewById(R.id.popupBookmark);
         cancelBtn=findViewById(R.id.popupCancel);
         popUpBtn=findViewById(R.id.popupBtn);
-//        autoCompleteTextView=findViewById(R.id.autoCompleteMain);
         bottomNav.setSelectedItemId(R.id.nb_map);
         chipGroup=findViewById(R.id.categories_chip_group);
         //endregion
@@ -227,6 +225,12 @@ public class MainActivity extends Activity {
 
         addCategories();
 
+        if(isMyServiceRunning(MyService.class)){
+            Toast.makeText(that, "Service radi u pozadini", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Toast.makeText(that, "Service ne radi u pozadini", Toast.LENGTH_SHORT).show();
+        }
         //region FAB-s
         fabPointer=findViewById(R.id.fab_pointer);
         fabPointer.setOnClickListener(v -> {
@@ -236,6 +240,18 @@ public class MainActivity extends Activity {
         });
         fabAdd=findViewById(R.id.fab_add);
         fabAdd.setOnClickListener(v -> startActivityForResult(new Intent(MainActivity.this,CreateEventActivity.class),1));
+        fabService=findViewById(R.id.fab_service);
+        fabService.setOnClickListener(v -> {
+            Intent intent=new Intent(that, MyService.class);
+            if(!isMyServiceRunning(MyService.class)){
+                Toast.makeText(that, "Starting service", Toast.LENGTH_SHORT).show();
+                startService(intent);
+            }
+            else {
+                Toast.makeText(that, "Stopping service", Toast.LENGTH_SHORT).show();
+                stopService(intent);
+            }
+        });
         //endregion
 
 
@@ -800,6 +816,15 @@ public class MainActivity extends Activity {
            return events.get(0);
        else
            return null;
+    }
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
     //endregion
 }

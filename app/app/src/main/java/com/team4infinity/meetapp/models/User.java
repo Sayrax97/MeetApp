@@ -15,6 +15,8 @@ public class User {
     public String lastName;
     public String gender;
     public String birthDate;
+    public double locLat;
+    public double locLon;
     public ArrayList<String> bookmarkedEventsID=new ArrayList<>();
     public ArrayList<String> ratedEventsID=new ArrayList<>();
     public ArrayList<String> attendedEventsID =new ArrayList<>();

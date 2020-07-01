@@ -14,8 +14,19 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".EventGalleryActivity"></activity>
-        <activity android:name=".EventActivity" android:theme="@style/AppThemeMat" />
+        <service
+            android:name=".MyService"
+            android:enabled="true"
+            android:exported="true"></service>
+        <service
+            android:name=".Service"
+            android:enabled="true"
+            android:exported="true" />
+
+        <activity android:name=".EventGalleryActivity" />
+        <activity
+            android:name=".EventActivity"
+            android:theme="@style/AppThemeMat" />
         <activity android:name=".FilterActivity" />
         <activity android:name=".EventsActivity" />
         <activity android:name=".ProfileActivity" />
