@@ -3,10 +3,12 @@ package com.team4infinity.meetapp;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.collection.ArraySet;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -21,6 +23,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -36,6 +40,7 @@ import com.team4infinity.meetapp.models.User;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -50,14 +55,18 @@ public class EventActivity extends AppCompatActivity {
     //region Members
     private Event event;
     private Context that=this;
-    private TextView eAddressTextView,eDateTextView,eRatingTextView,eDaysLeftTextView,eHoursLeftTextView,eMinutesLeftTextView,eSecondsLeftTextView,eCreatorTextView,eDescriptionTextView,eSpecReqTextView,galleryViewAllTextView,ePriceTextView,eOccupancyTextView;
+    private TextView eAddressTextView,eDateTextView,eRatingTextView,eDaysLeftTextView,eHoursLeftTextView,eMinutesLeftTextView,eSecondsLeftTextView,eCreatorTextView,eDescriptionTextView,eSpecReqTextView,galleryViewAllTextView,attendeesViewAllTextView,ePriceTextView,eOccupancyTextView;
     private ImageView coverImage,expandImage;
-    private Button eventButton;
+    private MaterialButton eventButton;
     private LinearLayout galleryHorizontalScrollView, attendeesHorizontalScrollView,bottomSheetLinearLayout;
     private RatingBar ratingBar;
     private StorageReference storage;
     private FirebaseAuth auth;
     private DatabaseReference database;
+    private ArrayList<Uri> uris;
+    private ArrayList<Uri> attendeesImagesUris;
+    private ArrayList<String > attendeesNames;
+
     //endregion
     @SuppressLint("SetTextI18n")
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -87,9 +96,11 @@ public class EventActivity extends AppCompatActivity {
         galleryViewAllTextView=findViewById(R.id.gallery_view_all);
         galleryHorizontalScrollView=findViewById(R.id.gallery_hsv);
         attendeesHorizontalScrollView =findViewById(R.id.atendees_hsv);
+        attendeesViewAllTextView=findViewById(R.id.attendees_view_all);
         storage= FirebaseStorage.getInstance().getReference();
         auth=FirebaseAuth.getInstance();
         database= FirebaseDatabase.getInstance().getReference();
+        uris=new ArrayList<>();
         //endregion
 
         //region GetEvent
@@ -266,10 +277,27 @@ public class EventActivity extends AppCompatActivity {
 
         loadGallery();
 
+        galleryViewAllTextView.setOnClickListener(v -> {
+            Intent intent=new Intent(that,EventGalleryActivity.class);
+            intent.putExtra("uris",uris);
+            intent.putExtra("key",event.getKey());
+            startActivity(intent);
+        });
         loadAtendees();
+        attendeesViewAllTextView.setOnClickListener(v -> {
+            MaterialAlertDialogBuilder materialAlertDialogBuilder=new MaterialAlertDialogBuilder(that);
+            materialAlertDialogBuilder.setTitle("Attendees of "+event.getTitle()).setItems(attendeesNames.toArray(new CharSequence[]{}),(dialog, which) -> {
+
+            }).show();
+        });
     }
 
-
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadGallery();
+    }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -283,19 +311,25 @@ public class EventActivity extends AppCompatActivity {
     }
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void loadGallery() {
+        uris=new ArrayList<>();
+        galleryHorizontalScrollView.removeAllViews();
         storage.child(FIREBASE_EVENT_CHILD).child(event.getKey()).listAll().addOnSuccessListener(listResult -> {
             listResult.getItems().forEach(storageReference -> {
                 storageReference.getDownloadUrl().addOnSuccessListener(uri -> {
-                    //ImageView Setup
-                    ImageView imageView = new ImageView(this);
+                    if(!uris.contains(uri))
+                    {
+                        uris.add(uri);
+                        //ImageView Setup
+                        ImageView imageView = new ImageView(this);
 
-                    //setting image resource
-                    Picasso.with(that).load(uri).resize(500,500).centerInside().into(imageView);
+                        //setting image resource
+                        Picasso.with(that).load(uri).resize(500,500).centerInside().into(imageView);
 
-                    //setting image position
-                    imageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                            LinearLayout.LayoutParams.MATCH_PARENT));
-                    galleryHorizontalScrollView.addView(imageView);
+                        //setting image position
+                        imageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT));
+                        galleryHorizontalScrollView.addView(imageView);
+                    }
                 });
 
             });
@@ -335,9 +369,24 @@ public class EventActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void loadAtendees() {
         attendeesHorizontalScrollView.removeAllViews();
+        attendeesNames= new ArrayList<>();
+        attendeesImagesUris=new ArrayList<>();
         event.getAttendeesID().forEach(uid -> {
             Log.d(TAG, "loadAtendees: "+uid);
+            database.child(FIREBASE_CHILD_USER).child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    User user=dataSnapshot.getValue(User.class);
+                    attendeesNames.add(user.firstName+" "+user.lastName);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
             storage.child(FIREBASE_CHILD_USER).child(uid).child("profile").getDownloadUrl().addOnSuccessListener(uri -> {
+                attendeesImagesUris.add(uri);
                 CircleImageView imageView = new CircleImageView(this);
                 Picasso.with(that).load(uri).resize(500,500).centerInside().into(imageView);
                 imageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -356,4 +405,5 @@ public class EventActivity extends AppCompatActivity {
             }
         });
     }
+
 }
