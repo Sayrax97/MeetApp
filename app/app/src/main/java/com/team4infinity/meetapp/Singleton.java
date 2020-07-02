@@ -158,4 +158,14 @@ public class Singleton {
         }
     }
 
+    public ArrayList<Event> getBookmarked(){
+        ArrayList<Event> send=new ArrayList<Event>();
+        for (Event e:events) {
+            if(user.bookmarkedEventsID.contains(e.key)){
+                send.add(e);
+            }
+        }
+        return send;
+    }
+
 }

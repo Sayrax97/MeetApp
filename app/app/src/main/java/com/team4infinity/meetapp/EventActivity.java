@@ -94,7 +94,7 @@ public class EventActivity extends AppCompatActivity {
 
         //region GetEvent
         Intent eventIntent=getIntent();
-        String eventkey=eventIntent.getStringExtra("key");
+        String eventkey=eventIntent.getStringExtra("Activity");
         int index=Singleton.getInstance().getEventKeyIndexer().get(eventkey);
         event=Singleton.getInstance().getEvents().get(index);
         //endregion

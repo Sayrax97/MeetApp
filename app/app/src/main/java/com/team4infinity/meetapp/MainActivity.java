@@ -148,6 +148,13 @@ public class MainActivity extends Activity {
                 }
                 case R.id.nb_events:{
                     Intent intent=new Intent(that,EventsActivity.class);
+                    intent.putExtra("Activity","event");
+                    that.startActivity(intent);
+                    break;
+                }
+                case R.id.nb_bookmarks:{
+                    Intent intent=new Intent(that,EventsActivity.class);
+                    intent.putExtra("Activity","bookmark");
                     that.startActivity(intent);
                     break;
                 }

@@ -12,6 +12,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Spannable;
@@ -23,8 +24,10 @@ import android.view.SubMenu;
 import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.team4infinity.meetapp.adapters.BookmarkRecyclerAdapter;
 import com.team4infinity.meetapp.adapters.EventsRecyclerAdapter;
 import com.team4infinity.meetapp.models.Event;
+import com.team4infinity.meetapp.models.User;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,6 +46,7 @@ public class EventsActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ArrayList<Event> events;
     private static String sortOrder;
+    boolean sem=true;
 
     //endregion
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -54,13 +58,25 @@ public class EventsActivity extends AppCompatActivity {
         bottomNav=findViewById(R.id.bottom_nav_bar);
         sortOrder=getResources().getString(R.string.asc);
         //region Recycler view
-        events=Singleton.getInstance().events;
         recyclerView=findViewById(R.id.rv_events);
-        setRecyclerView();
+        Intent intGet= getIntent();
+        Bundle bundle=intGet.getExtras();
+        if(bundle.getString("Activity").equals("event")) {
+            setRecyclerView();
+            sem=true;
+            bottomNav.setSelectedItemId(R.id.nb_events);
+            events=Singleton.getInstance().events;
+        }
+        else {
+            setRecyclerViewBookmark();
+            sem=false;
+            bottomNav.setSelectedItemId(R.id.nb_bookmarks);
+            events=Singleton.getInstance().getBookmarked();
+        }
         //endregion
 
         //region BottomNavBar
-        bottomNav.setSelectedItemId(R.id.nb_events);
+
         bottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -74,6 +90,22 @@ public class EventsActivity extends AppCompatActivity {
                         Intent openMainActivity = new Intent(that, MainActivity.class);
                         openMainActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                         startActivityIfNeeded(openMainActivity, 0);
+                        break;
+                    }
+                    case  R.id.nb_bookmarks:{
+                        if(bottomNav.getSelectedItemId()!=R.id.nb_bookmarks) {
+                            Intent intent = new Intent(that, EventsActivity.class);
+                            intent.putExtra("Activity", "bookmark");
+                            startActivity(intent);
+                        }
+                        break;
+                    }
+                    case  R.id.nb_events:{
+                        if(bottomNav.getSelectedItemId()!=R.id.nb_events) {
+                            Intent intent = new Intent(that, EventsActivity.class);
+                            intent.putExtra("Activity", "event");
+                            startActivity(intent);
+                         }
                         break;
                     }
                 }
@@ -90,8 +122,15 @@ public class EventsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         events=Singleton.getInstance().events;
-        bottomNav.setSelectedItemId(R.id.nb_events);
-        setRecyclerView();
+        if(sem) {
+            setRecyclerView();
+            bottomNav.setSelectedItemId(R.id.nb_events);
+        }
+        else {
+            setRecyclerViewBookmark();
+            bottomNav.setSelectedItemId(R.id.nb_bookmarks);
+        }
+
     }
 
     @SuppressLint("RestrictedApi")
@@ -197,6 +236,12 @@ public class EventsActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void setRecyclerViewBookmark(){
+        BookmarkRecyclerAdapter adapter=new BookmarkRecyclerAdapter(this,Singleton.getInstance().getUser().bookmarkedEventsID);
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+    }
 
     public static class EventComparator implements Comparator<Event> {
         private String sortBy;
@@ -229,7 +274,10 @@ public class EventsActivity extends AppCompatActivity {
             if(resultCode==RESULT_OK){
                 try {
                     JSONObject filterParams=new JSONObject(data.getStringExtra("sendBack"));
-                    System.out.println(filterParams.toString());
+                    for (Event e: events) {
+
+                    }
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
