@@ -48,7 +48,7 @@ public class Singleton {
         events=new ArrayList<>();
         database= FirebaseDatabase.getInstance().getReference();
         auth= FirebaseAuth.getInstance();
-
+        loadUser();
         database.child(FIREBASE_CHILD_CAT).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -64,19 +64,6 @@ public class Singleton {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 cities=dataSnapshot.getValue(Cities.class);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-        final FirebaseUser currentUser= auth.getCurrentUser();
-        database.child(FIREBASE_CHILD_USER).child(currentUser.getUid()).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                user=dataSnapshot.getValue(User.class);
-                user.uID=currentUser.getUid();
             }
 
             @Override
@@ -157,5 +144,19 @@ public class Singleton {
             eventKeyIndexer.put(events.get(index).getKey(),index);
         }
     }
+    public void loadUser(){
+        FirebaseUser currentUser= auth.getCurrentUser();
+        database.child(FIREBASE_CHILD_USER).child(currentUser.getUid()).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                user=dataSnapshot.getValue(User.class);
+                user.uID=currentUser.getUid();
+            }
 
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
 }

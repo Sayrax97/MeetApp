@@ -225,12 +225,6 @@ public class MainActivity extends Activity {
 
         addCategories();
 
-        if(isMyServiceRunning(MyService.class)){
-            Toast.makeText(that, "Service radi u pozadini", Toast.LENGTH_SHORT).show();
-        }
-        else {
-            Toast.makeText(that, "Service ne radi u pozadini", Toast.LENGTH_SHORT).show();
-        }
         //region FAB-s
         fabPointer=findViewById(R.id.fab_pointer);
         fabPointer.setOnClickListener(v -> {
@@ -276,7 +270,10 @@ public class MainActivity extends Activity {
             }
         });
         showEventsInit();
+        //showEvents();
         setUpMapClick();
+
+        Singleton.getInstance().loadUser();
     }
 
     //region Resume/Pause
