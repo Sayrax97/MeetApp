@@ -101,5 +101,6 @@
     <string name="already_attendee">You are already an attendee</string>
     <string name="event_full">Event Full</string>
     <string name="event_creator">Event Creator</string>
+    <string name="points">Points</string>
 
 </resources>

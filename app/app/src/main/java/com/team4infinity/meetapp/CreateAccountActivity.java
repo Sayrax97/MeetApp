@@ -142,7 +142,7 @@ public class CreateAccountActivity extends Activity {
                             that.startActivity(i);
                         }
                         else {
-                            Toast.makeText(CreateAccountActivity.this, "Creating account failed", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(CreateAccountActivity.this, "Creating account failed,email might be already in use", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });

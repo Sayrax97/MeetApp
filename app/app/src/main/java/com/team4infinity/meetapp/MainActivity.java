@@ -1,7 +1,9 @@
 package com.team4infinity.meetapp;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -26,6 +28,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,6 +36,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 
@@ -47,6 +51,7 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -104,14 +109,14 @@ public class MainActivity extends Activity {
     private IMapController mapController=null;
     private MyLocationNewOverlay myLocationNewOverlay;
     private ChipGroup chipGroup;
-    private FloatingActionButton fabPointer,fabAdd;
-    private TextView popupTextView1,popupTextView2;
-    private Button cancelBtn;
-    private Button popUpBtn;
+    private FloatingActionButton fabPointer,fabAdd,fabService;
+    private TextView popupTextView1,popupTextView2,popUpTextView3;
+    private MaterialButton cancelBtn;
+    private MaterialButton popUpBtn;
+    private ImageView popupBookmarkImageView;
     private BottomNavigationView bottomNav;
-    private ConstraintLayout popUpConstraintLayout;
+    private CardView popUpCardView;
     private SearchView searchView;
-//    private AutoCompleteTextView autoCompleteTextView;
     private DatabaseReference database;
     private StorageReference storage;
     private ItemizedIconOverlay eventsOverlay;
@@ -127,13 +132,14 @@ public class MainActivity extends Activity {
         database= FirebaseDatabase.getInstance().getReference();
         storage= FirebaseStorage.getInstance().getReference();
         bottomNav=findViewById(R.id.bottom_nav_bar);
-        popUpConstraintLayout=findViewById(R.id.popupWindowMain);
+        popUpCardView=findViewById(R.id.popupWindowMain);
         searchView=findViewById(R.id.searchView);
         popupTextView1=findViewById(R.id.popupText1);
         popupTextView2=findViewById(R.id.popupText2);
+        popUpTextView3=findViewById(R.id.popupText3);
+        popupBookmarkImageView=findViewById(R.id.popupBookmark);
         cancelBtn=findViewById(R.id.popupCancel);
         popUpBtn=findViewById(R.id.popupBtn);
-//        autoCompleteTextView=findViewById(R.id.autoCompleteMain);
         bottomNav.setSelectedItemId(R.id.nb_map);
         chipGroup=findViewById(R.id.categories_chip_group);
         //endregion
@@ -199,7 +205,7 @@ public class MainActivity extends Activity {
                     }
                     map.getOverlays().add(myLocationNewOverlay);
                 }
-                setUpLongPress();
+                setUpMapClick();
                 return false;
             }
         });
@@ -235,6 +241,18 @@ public class MainActivity extends Activity {
         });
         fabAdd=findViewById(R.id.fab_add);
         fabAdd.setOnClickListener(v -> startActivityForResult(new Intent(MainActivity.this,CreateEventActivity.class),1));
+        fabService=findViewById(R.id.fab_service);
+        fabService.setOnClickListener(v -> {
+            Intent intent=new Intent(that, MyService.class);
+            if(!isMyServiceRunning(MyService.class)){
+                Toast.makeText(that, "Starting service", Toast.LENGTH_SHORT).show();
+                startService(intent);
+            }
+            else {
+                Toast.makeText(that, "Stopping service", Toast.LENGTH_SHORT).show();
+                stopService(intent);
+            }
+        });
         //endregion
 
 
@@ -259,7 +277,10 @@ public class MainActivity extends Activity {
             }
         });
         showEventsInit();
-        setUpLongPress();
+        //showEvents();
+        setUpMapClick();
+
+        Singleton.getInstance().loadUser();
     }
 
     //region Resume/Pause
@@ -268,7 +289,7 @@ public class MainActivity extends Activity {
         super.onResume();
         bottomNav.setSelectedItemId(R.id.nb_map);
         showEvents();
-        setUpLongPress();
+        setUpMapClick();
         showMyLocation();
         map.onResume();
     }
@@ -409,16 +430,13 @@ public class MainActivity extends Activity {
         if (!getEvents().isEmpty())
         {
             for (Event e:getEvents()) {
-                OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
+                OverlayItem item = new OverlayItem(e.title, e.key,new GeoPoint(e.lat,e.lon));
                 item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
                 items.add(item);
                 Marker m= new Marker(map);
-                m.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
-                    @Override
-                    public boolean onMarkerClick(Marker marker, MapView mapView) {
-                        m.closeInfoWindow();
-                        return false;
-                    }
+                m.setOnMarkerClickListener((marker, mapView) -> {
+                    m.closeInfoWindow();
+                    return false;
                 });
                 m.setTextLabelBackgroundColor(Color.TRANSPARENT);
                 m.setTextIcon(e.getTitle());
@@ -432,10 +450,10 @@ public class MainActivity extends Activity {
                     IGeoPoint p = item.getPoint();
                     popUpBtn.setText("View Event");
                     cancelBtn.setOnClickListener(v -> {
-                        popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                        popUpCardView.setVisibility(View.INVISIBLE);
                     });
                     popUpBtn.setOnClickListener(v -> {
-                        popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                        popUpCardView.setVisibility(View.INVISIBLE);
                         Intent intent=new Intent(that,EventActivity.class);
                         intent.putExtra("key",getEvents().get(index).getKey());
                         startActivity(intent);
@@ -445,7 +463,12 @@ public class MainActivity extends Activity {
                         address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
                         popupTextView1.setText(item.getTitle());
                         popupTextView2.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
-                        popUpConstraintLayout.setVisibility(View.VISIBLE);
+                        Event e=getEvents().get(index);
+                        popUpTextView3.setText(e.getAttendeesID().size()+"/"+e.getMaxOccupancy());
+                        popupBookmarkImageView.setOnClickListener(v -> {
+                            Toast.makeText(that, "Bookmark clicked", Toast.LENGTH_SHORT).show();
+                        });
+                        popUpCardView.setVisibility(View.VISIBLE);
 
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -507,10 +530,10 @@ public class MainActivity extends Activity {
                             IGeoPoint p = item.getPoint();
                             popUpBtn.setText("View Event");
                             cancelBtn.setOnClickListener(v -> {
-                                popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                                popUpCardView.setVisibility(View.INVISIBLE);
                             });
                             popUpBtn.setOnClickListener(v -> {
-                                popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                                popUpCardView.setVisibility(View.INVISIBLE);
                                 Intent intent=new Intent(that,EventActivity.class);
                                 intent.putExtra("key",e.getKey());
                                 startActivity(intent);
@@ -520,7 +543,10 @@ public class MainActivity extends Activity {
                                 address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
                                 popupTextView1.setText(item.getTitle());
                                 popupTextView2.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
-                                popUpConstraintLayout.setVisibility(View.VISIBLE);
+                                popUpCardView.setVisibility(View.VISIBLE);
+                                Event e=getEvents().get(index);
+                                popUpTextView3.setText(e.getAttendeesID().size()+"/"+e.getMaxOccupancy());
+                                popUpCardView.setVisibility(View.VISIBLE);
 
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -605,11 +631,11 @@ public class MainActivity extends Activity {
                 IGeoPoint p = item.getPoint();
                 popUpBtn.setText(R.string.view_event);
                 cancelBtn.setOnClickListener(v -> {
-                    popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                    popUpCardView.setVisibility(View.INVISIBLE);
 
                 });
                 popUpBtn.setOnClickListener(v -> {
-                    popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                    popUpCardView.setVisibility(View.INVISIBLE);
                     Intent intent=new Intent(that,EventActivity.class);
                     intent.putExtra("key",item.getSnippet());
                     startActivity(intent);
@@ -619,7 +645,7 @@ public class MainActivity extends Activity {
                     address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
                     popupTextView1.setText(item.getTitle());
                     popupTextView2.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
-                    popUpConstraintLayout.setVisibility(View.VISIBLE);
+                    popUpCardView.setVisibility(View.VISIBLE);
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -729,7 +755,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void setUpLongPress(){
+    private void setUpMapClick(){
         MapEventsReceiver mapEventsReceiver=new MapEventsReceiver() {
             @Override
             public boolean singleTapConfirmedHelper(GeoPoint p) {
@@ -741,10 +767,10 @@ public class MainActivity extends Activity {
                 Address address;
                 popUpBtn.setText(getResources().getText(R.string.create_event));
                 cancelBtn.setOnClickListener(v -> {
-                    popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                    popUpCardView.setVisibility(View.INVISIBLE);
                 });
                 popUpBtn.setOnClickListener(v -> {
-                    popUpConstraintLayout.setVisibility(View.INVISIBLE);
+                    popUpCardView.setVisibility(View.INVISIBLE);
                     Intent locationIntent = new Intent(MainActivity.this,CreateEventActivity.class);
                     locationIntent.putExtra("lon", p.getLongitude());
                     locationIntent.putExtra("lat", p.getLatitude());
@@ -755,7 +781,7 @@ public class MainActivity extends Activity {
                     address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
                     popupTextView1.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
                     popupTextView2.setText(address.getLocality());
-                    popUpConstraintLayout.setVisibility(View.VISIBLE);
+                    popUpCardView.setVisibility(View.VISIBLE);
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -794,6 +820,15 @@ public class MainActivity extends Activity {
            return events.get(0);
        else
            return null;
+    }
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
     //endregion
 }

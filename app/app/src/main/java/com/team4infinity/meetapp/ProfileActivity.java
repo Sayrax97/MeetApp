@@ -34,20 +34,24 @@ public class ProfileActivity extends AppCompatActivity {
     //region Members
     CircleImageView profileImage;
     public static final long ONE_MEGABYTE=1024*1024;
-    TextView fullName,email,gender,date,createdEvents,ratedEvents,attendedEvents;
+    TextView fullName,email,gender,date,createdEvents,ratedEvents,attendedEvents,pointsTextView;
     StorageReference storage;
     DatabaseReference database;
     FirebaseAuth auth;
     //endregion
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        //region Init
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
+        //region Action bar
         if (getSupportActionBar()!=null){
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
+        //endregion
+
+        //region Init
         profileImage=findViewById(R.id.profile_image);
         fullName =findViewById(R.id.profile_full_name);
         email=findViewById(R.id.profile_email);
@@ -56,6 +60,7 @@ public class ProfileActivity extends AppCompatActivity {
         createdEvents=findViewById(R.id.profile_created_events);
         ratedEvents=findViewById(R.id.profile_rated_events);
         attendedEvents=findViewById(R.id.profile_attended_events);
+        pointsTextView=findViewById(R.id.profile_points);
         createdEvents.setText(String.valueOf(getUser().createdEventsID.size()));
         ratedEvents.setText(String.valueOf(getUser().ratedEventsID.size()));
         attendedEvents.setText(String.valueOf(getUser().attendedEventsID.size()));
@@ -63,44 +68,19 @@ public class ProfileActivity extends AppCompatActivity {
         email.setText(getUser().email);
         gender.setText(getUser().gender);
         date.setText(getUser().birthDate);
+        pointsTextView.setText(getUser().points+" stars");
         storage=FirebaseStorage.getInstance().getReference();
         database=FirebaseDatabase.getInstance().getReference();
         auth=FirebaseAuth.getInstance();
         //endregion
-        Toast.makeText(this, ""+getUser().uID, Toast.LENGTH_SHORT).show();
+
         //region Storage
         storage.child("users").child(getUser().uID).child("profile").getDownloadUrl().addOnSuccessListener(uri -> {
             Picasso.with(this).load(uri).fit().into(profileImage);
         });
-//        storage.child("users").child(getUser().uID).child("profile").getBytes(5*ONE_MEGABYTE).addOnCompleteListener(new OnCompleteListener<byte[]>() {
-//            @Override
-//            public void onComplete(@NonNull Task<byte[]> task) {
-//                byte[] data = task.getResult();
-//                Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-//
-//                profileImage.setImageBitmap(Bitmap.createScaledBitmap(bmp, profileImage.getWidth(),
-//                        profileImage.getHeight(), false));
-//            }
-//        });
+
         //endregion
 
-        //region Database
-//        database.child("users").child(getUser().uID).addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                User user_data=dataSnapshot.getValue(User.class);
-//                fullName.setText(user_data.FullName());
-//                email.setText(user_data.email);
-//                gender.setText(user_data.gender);
-//                date.setText(user_data.birthDate);
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//            }
-//        });
-        //endregion
     }
 
     @Override

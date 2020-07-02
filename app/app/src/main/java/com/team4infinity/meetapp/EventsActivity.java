@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ImageSpan;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -58,6 +59,7 @@ public class EventsActivity extends AppCompatActivity {
         bottomNav=findViewById(R.id.bottom_nav_bar);
         sortOrder=getResources().getString(R.string.asc);
         //region Recycler view
+        events=Singleton.getInstance().getEvents();
         recyclerView=findViewById(R.id.rv_events);
         Intent intGet= getIntent();
         Bundle bundle=intGet.getExtras();
@@ -74,7 +76,6 @@ public class EventsActivity extends AppCompatActivity {
             events=Singleton.getInstance().getBookmarked();
         }
         //endregion
-
         //region BottomNavBar
 
         bottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -90,6 +91,7 @@ public class EventsActivity extends AppCompatActivity {
                         Intent openMainActivity = new Intent(that, MainActivity.class);
                         openMainActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                         startActivityIfNeeded(openMainActivity, 0);
+                        finish();
                         break;
                     }
                     case  R.id.nb_bookmarks:{
@@ -165,6 +167,7 @@ public class EventsActivity extends AppCompatActivity {
                     Toast.makeText(that, "sort order: "+sortOrder, Toast.LENGTH_SHORT).show();
                     Collections.reverse(events);
                     item.setChecked(true);
+                    Singleton.getInstance().resetEventKeyIndexer();
                 }
                 break;
             }
@@ -175,16 +178,19 @@ public class EventsActivity extends AppCompatActivity {
                     Toast.makeText(that, "sort order: "+sortOrder, Toast.LENGTH_SHORT).show();
                     Collections.reverse(events);
                     item.setChecked(true);
+                    Singleton.getInstance().resetEventKeyIndexer();
                 }
                 break;
             }
             case 11:{
                 Toast.makeText(that, "Name clicked", Toast.LENGTH_SHORT).show();
-                if(sortOrder.compareTo(getResources().getString(R.string.asc))==0)
+                if(sortOrder.compareTo(getResources().getString(R.string.asc))==0){
                     Collections.sort(events,Comparator.comparing(Event::getTitle));
+                }
                 else {
                     Collections.sort(events,Comparator.comparing(Event::getTitle).reversed());
                 }
+                Singleton.getInstance().resetEventKeyIndexer();
                 break;
             }
             case 12:{
@@ -200,11 +206,17 @@ public class EventsActivity extends AppCompatActivity {
                 else {
                     Collections.sort(events,Comparator.comparing(Event::getPrice).reversed());
                 }
+                Singleton.getInstance().resetEventKeyIndexer();
                 break;
             }
             case 14:{
-                //TODO
                 Toast.makeText(that, "Occupancy clicked", Toast.LENGTH_SHORT).show();
+                if(sortOrder.compareTo(getResources().getString(R.string.asc))==0)
+                    sortArrayByCount(true);
+                else {
+                    sortArrayByCount(false);
+                }
+                Singleton.getInstance().resetEventKeyIndexer();
                 break;
             }
             case 15:{
@@ -214,6 +226,7 @@ public class EventsActivity extends AppCompatActivity {
                 else {
                     Collections.sort(events,Comparator.comparing(Event::getRating));
                 }
+                Singleton.getInstance().resetEventKeyIndexer();
                 break;
             }
         }
@@ -280,6 +293,28 @@ public class EventsActivity extends AppCompatActivity {
 
                 } catch (JSONException e) {
                     e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private void sortArrayByCount(boolean ascending){
+        for (int i=0;i<events.size()-1;i++){
+            for (int j=i+1;j<events.size();j++){
+                if (ascending)
+                    {
+                        if(events.get(i).getAttendeesID().size()>events.get(j).getAttendeesID().size()){
+                            Event event=events.get(i);
+                            events.set(i,events.get(j));
+                            events.set(j,event);
+                        }
+                    }
+                else{
+                    if(events.get(i).getAttendeesID().size()<events.get(j).getAttendeesID().size()){
+                        Event event=events.get(i);
+                        events.set(i,events.get(j));
+                        events.set(j,event);
+                    }
                 }
             }
         }
