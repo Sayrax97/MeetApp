@@ -179,9 +179,13 @@ public class EventActivity extends AppCompatActivity {
         });
         //endregion
 
-        ratingBar.setRating((float) event.rating);
         ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
             if(fromUser){
+                if(event.getCreatorID().compareTo(auth.getCurrentUser().getUid())==0){
+                    Toast.makeText(that, "Can't rate your own event", Toast.LENGTH_SHORT).show();
+                    ratingBar.setRating((float) event.rating);
+                    return;
+                }
                 String userId=auth.getCurrentUser().getUid();
                 database.child(FIREBASE_CHILD_USER).child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -221,6 +225,19 @@ public class EventActivity extends AppCompatActivity {
                                     database.child(FIREBASE_EVENT_CHILD).child(event.getKey()).child("ratedByID").child(e.getRatedByID().size()+"").setValue(userId);
                                     ratingBar.setRating((float) newRating);
                                     eRatingTextView.setText(String.format("%.2f", newRating));
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                }
+                            });
+                            database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("points").addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                    double points=dataSnapshot.getValue(Double.class);
+                                    double newpoints=points+rating;
+                                    database.child(FIREBASE_CHILD_USER).child(event.getCreatorID()).child("points").setValue(newpoints);
                                 }
 
                                 @Override
