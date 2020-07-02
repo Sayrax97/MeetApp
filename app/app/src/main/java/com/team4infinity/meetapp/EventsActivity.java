@@ -59,7 +59,6 @@ public class EventsActivity extends AppCompatActivity {
         bottomNav=findViewById(R.id.bottom_nav_bar);
         sortOrder=getResources().getString(R.string.asc);
         //region Recycler view
-        events=Singleton.getInstance().getEvents();
         recyclerView=findViewById(R.id.rv_events);
         Intent intGet= getIntent();
         Bundle bundle=intGet.getExtras();
