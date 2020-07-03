@@ -9,9 +9,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Spannable;
@@ -24,8 +26,12 @@ import android.view.SubMenu;
 import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.firebase.auth.FirebaseAuth;
+import com.team4infinity.meetapp.adapters.BookmarkRecyclerAdapter;
 import com.team4infinity.meetapp.adapters.EventsRecyclerAdapter;
 import com.team4infinity.meetapp.models.Event;
+import com.team4infinity.meetapp.models.User;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,6 +50,8 @@ public class EventsActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ArrayList<Event> events;
     private static String sortOrder;
+    private FirebaseAuth auth;
+    boolean sem=true;
 
     //endregion
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -53,15 +61,28 @@ public class EventsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_events);
         bottomNav=findViewById(R.id.bottom_nav_bar);
+        auth=FirebaseAuth.getInstance();
         sortOrder=getResources().getString(R.string.asc);
         //region Recycler view
-        events=Singleton.getInstance().getEvents();
         recyclerView=findViewById(R.id.rv_events);
-        setRecyclerView();
+        Intent intGet= getIntent();
+        Bundle bundle=intGet.getExtras();
+        if(bundle.getString("Activity").equals("event")) {
+            setRecyclerView();
+            sem=true;
+            bottomNav.setSelectedItemId(R.id.nb_events);
+            events=Singleton.getInstance().events;
+        }
+        else {
+            setRecyclerViewBookmark();
+            sem=false;
+            bottomNav.setSelectedItemId(R.id.nb_bookmarks);
+            events=Singleton.getInstance().getBookmarked();
+        }
         //endregion
         //region BottomNavBar
-        bottomNav.setSelectedItemId(R.id.nb_events);
-        bottomNav.setOnNavigationItemSelectedListener(item -> {
+
+        bottomNav.setOnNavigationItemSelectedListener((BottomNavigationView.OnNavigationItemSelectedListener) item -> {
             switch (item.getItemId()){
                 case R.id.nb_profile:{
                     Intent intent=new Intent(that,ProfileActivity.class);
@@ -74,6 +95,54 @@ public class EventsActivity extends AppCompatActivity {
                     startActivityIfNeeded(openMainActivity, 0);
                     finish();
                     break;
+                }
+                case  R.id.nb_bookmarks:{
+                    if(bottomNav.getSelectedItemId()!=R.id.nb_bookmarks) {
+                        Intent intent = new Intent(that, EventsActivity.class);
+                        intent.putExtra("Activity", "bookmark");
+                        startActivity(intent);
+                    }
+                    break;
+                }
+                case  R.id.nb_events:{
+                    if(bottomNav.getSelectedItemId()!=R.id.nb_events) {
+                        Intent intent = new Intent(that, EventsActivity.class);
+                        intent.putExtra("Activity", "event");
+                        startActivity(intent);
+                     }
+                    break;
+                }
+                case R.id.nb_options:{
+                    MaterialAlertDialogBuilder dialogBuilder=new MaterialAlertDialogBuilder(that);
+                    dialogBuilder.setTitle(R.string.options).setItems(isMyServiceRunning(MyService.class)?new CharSequence[]{menuIconWithText(getResources().getDrawable(R.drawable.ranking,null),"Leaderboards"),
+                                    menuIconWithText(getResources().getDrawable(R.drawable.ic_baseline_rss_feed_24,null),"Turn off service"), menuIconWithText(getResources().getDrawable(R.drawable.logout,null),"Logout")}:
+                                    new CharSequence[]{menuIconWithText(getResources().getDrawable(R.drawable.ranking,null),"Leaderboards"), menuIconWithText(getResources().getDrawable(R.drawable.ic_baseline_rss_feed_24,null),"Turn on service"),
+                                            menuIconWithText(getResources().getDrawable(R.drawable.logout,null),"Logout")},
+                            (dialog, which) -> {
+                                switch (which){
+                                    case 0:{
+                                        startActivity(new Intent(that,LeaderboardsActivity.class));
+                                        break;
+                                    }
+                                    case 1:{
+                                        Intent intent=new Intent(that, MyService.class);
+                                        if(isMyServiceRunning(MyService.class)){
+                                            stopService(intent);
+                                        }
+                                        else {
+                                            startService(intent);
+                                        }
+                                        break;
+                                    }
+                                    case 2:{
+                                        auth.signOut();
+                                        Intent intent=new Intent(this,LoginActivity.class);
+                                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                        startActivity(intent);
+                                        break;
+                                    }
+                                }
+                            }).show().setOnDismissListener(dialog -> bottomNav.setSelectedItemId(R.id.nb_events));
                 }
             }
             return true;
@@ -88,8 +157,15 @@ public class EventsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         events=Singleton.getInstance().events;
-        bottomNav.setSelectedItemId(R.id.nb_events);
-        setRecyclerView();
+        if(sem) {
+            setRecyclerView();
+            bottomNav.setSelectedItemId(R.id.nb_events);
+        }
+        else {
+            setRecyclerViewBookmark();
+            bottomNav.setSelectedItemId(R.id.nb_bookmarks);
+        }
+
     }
 
     @SuppressLint("RestrictedApi")
@@ -206,6 +282,12 @@ public class EventsActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void setRecyclerViewBookmark(){
+        BookmarkRecyclerAdapter adapter=new BookmarkRecyclerAdapter(this,Singleton.getInstance().getUser().bookmarkedEventsID);
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+    }
 
     public static class EventComparator implements Comparator<Event> {
         private String sortBy;
@@ -238,7 +320,10 @@ public class EventsActivity extends AppCompatActivity {
             if(resultCode==RESULT_OK){
                 try {
                     JSONObject filterParams=new JSONObject(data.getStringExtra("sendBack"));
-                    System.out.println(filterParams.toString());
+                    for (Event e: events) {
+
+                    }
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -266,5 +351,15 @@ public class EventsActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

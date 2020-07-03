@@ -20,17 +20,14 @@
             android:name=".MyService"
             android:enabled="true"
             android:exported="true" />
-        <service
-            android:name=".Service"
-            android:enabled="true"
-            android:exported="true" />
 
         <activity android:name=".EventGalleryActivity" />
         <activity
             android:name=".EventActivity"
             android:theme="@style/AppThemeMat" />
         <activity android:name=".FilterActivity" />
-        <activity android:name=".EventsActivity" />
+        <activity android:name=".EventsActivity"
+            android:theme="@style/AppThemeMat" />
         <activity android:name=".ProfileActivity" />
         <activity android:name=".Popunjavanje" />
         <activity android:name=".CreateEventActivity" />

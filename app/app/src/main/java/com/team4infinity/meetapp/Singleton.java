@@ -144,6 +144,15 @@ public class Singleton {
             eventKeyIndexer.put(events.get(index).getKey(),index);
         }
     }
+    public ArrayList<Event> getBookmarked(){
+        ArrayList<Event> send=new ArrayList<Event>();
+        for (Event e:events) {
+            if(user.bookmarkedEventsID.contains(e.key)){
+                send.add(e);
+            }
+        }
+        return send;
+    }
     public void loadUser(){
         FirebaseUser currentUser= auth.getCurrentUser();
         database.child(FIREBASE_CHILD_USER).child(currentUser.getUid()).addValueEventListener(new ValueEventListener() {
@@ -152,6 +161,8 @@ public class Singleton {
                 user=dataSnapshot.getValue(User.class);
                 user.uID=currentUser.getUid();
             }
+
+    
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
