@@ -47,7 +47,8 @@ public class EventsActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ArrayList<Event> events;
     private static String sortOrder;
-    boolean sem=true;
+    private boolean sem=true;
+    private String key;
 
     //endregion
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -62,18 +63,18 @@ public class EventsActivity extends AppCompatActivity {
         recyclerView=findViewById(R.id.rv_events);
         Intent intGet= getIntent();
         Bundle bundle=intGet.getExtras();
-        if(bundle.getString("Activity").equals("event")) {
-            setRecyclerView();
+        key=bundle.getString("Activity");
+        if(key.equals("event")) {
             sem=true;
             bottomNav.setSelectedItemId(R.id.nb_events);
             events=Singleton.getInstance().events;
         }
         else {
-            setRecyclerViewBookmark();
             sem=false;
             bottomNav.setSelectedItemId(R.id.nb_bookmarks);
             events=Singleton.getInstance().getBookmarked();
         }
+        setRecyclerView(events,key);
         //endregion
         //region BottomNavBar
 
@@ -122,16 +123,15 @@ public class EventsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        events=Singleton.getInstance().events;
         if(sem) {
-            setRecyclerView();
             bottomNav.setSelectedItemId(R.id.nb_events);
+            events=Singleton.getInstance().events;
         }
         else {
-            setRecyclerViewBookmark();
             bottomNav.setSelectedItemId(R.id.nb_bookmarks);
+            events=Singleton.getInstance().getBookmarked();
         }
-
+        setRecyclerView(events,key);
     }
 
     @SuppressLint("RestrictedApi")
@@ -229,7 +229,8 @@ public class EventsActivity extends AppCompatActivity {
                 break;
             }
         }
-        setRecyclerView();
+        setRecyclerView(events,key);
+
         return super.onOptionsItemSelected(item);
     }
     private CharSequence menuIconWithText(Drawable r, String title) {
@@ -243,17 +244,17 @@ public class EventsActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void setRecyclerView(){
-        EventsRecyclerAdapter adapter=new EventsRecyclerAdapter(this,events);
+    private void setRecyclerView(ArrayList<Event> events1,String key){
+        EventsRecyclerAdapter adapter=new EventsRecyclerAdapter(this,events1,key);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    private void setRecyclerViewBookmark(){
-        BookmarkRecyclerAdapter adapter=new BookmarkRecyclerAdapter(this,Singleton.getInstance().getUser().bookmarkedEventsID);
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-    }
+//    @RequiresApi(api = Build.VERSION_CODES.N)
+//    private void setRecyclerViewBookmark(){
+//        BookmarkRecyclerAdapter adapter=new BookmarkRecyclerAdapter(this,Singleton.getInstance().getUser().bookmarkedEventsID);
+//        recyclerView.setAdapter(adapter);
+//        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+//    }
 
     public static class EventComparator implements Comparator<Event> {
         private String sortBy;

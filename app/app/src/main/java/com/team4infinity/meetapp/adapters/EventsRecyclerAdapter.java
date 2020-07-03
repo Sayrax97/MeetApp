@@ -30,10 +30,12 @@ public class EventsRecyclerAdapter extends RecyclerView.Adapter<EventsRecyclerAd
     private FirebaseAuth auth;
     private DatabaseReference database;
     private static final String FIREBASE_CHILD_USER ="users";
+    private String key;
 
-    public EventsRecyclerAdapter(Context ctx,List<Event> events)  {
+    public EventsRecyclerAdapter(Context ctx,List<Event> events,String key)  {
         this.events = events;
         this.ctx = ctx;
+        this.key=key;
         auth=FirebaseAuth.getInstance();
         database= FirebaseDatabase.getInstance().getReference();
     }
@@ -56,8 +58,14 @@ public class EventsRecyclerAdapter extends RecyclerView.Adapter<EventsRecyclerAd
         holder.bookmarkImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Singleton.getInstance().getUser().bookmarkedEventsID.add(events.get(position).key);
-                database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").child(""+(Singleton.getInstance().getUser().bookmarkedEventsID.size()-1)).setValue(events.get(position).key);
+                if(!Singleton.getInstance().getUser().bookmarkedEventsID.contains(events.get(position).key)) {
+                    Singleton.getInstance().getUser().bookmarkedEventsID.add(events.get(position).key);
+                    database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").child("" + (Singleton.getInstance().getUser().bookmarkedEventsID.size() - 1)).setValue(events.get(position).key);
+                }
+                else{
+                    Singleton.getInstance().getUser().bookmarkedEventsID.remove(events.get(position).key);
+                    database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").setValue(Singleton.getInstance().getUser().bookmarkedEventsID);
+                }
             }
         });
         holder.cardView.setOnClickListener(v -> {
