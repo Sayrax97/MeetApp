@@ -15,11 +15,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.storage.FirebaseStorage;
 import com.squareup.picasso.Picasso;
 import com.team4infinity.meetapp.EventActivity;
+import com.team4infinity.meetapp.ProfileActivity;
 import com.team4infinity.meetapp.R;
 import com.team4infinity.meetapp.models.User;
 
@@ -56,6 +58,12 @@ public class LeaderboardsAdapter extends RecyclerView.Adapter<LeaderboardsAdapte
         holder.profileImageView.setOnClickListener(v -> {
             Toast.makeText(ctx, "Go to "+fullName+" profile", Toast.LENGTH_SHORT).show();
         });
+        holder.layout.setOnClickListener(v -> {
+            Intent intent=new Intent(ctx, ProfileActivity.class);
+            intent.putExtra("type","other");
+            intent.putExtra("key",users.get(position).uID);
+            ctx.startActivity(intent);
+        });
     }
 
     @Override
@@ -65,6 +73,7 @@ public class LeaderboardsAdapter extends RecyclerView.Adapter<LeaderboardsAdapte
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         TextView fullnameTextView;
+        ConstraintLayout layout;
         TextView pointsTextView;
         CircleImageView profileImageView;
 
@@ -74,6 +83,7 @@ public class LeaderboardsAdapter extends RecyclerView.Adapter<LeaderboardsAdapte
             fullnameTextView = itemView.findViewById(R.id.leaderboards_rv_item_name);
             pointsTextView = itemView.findViewById(R.id.leaderboards_rv_points);
             profileImageView=itemView.findViewById(R.id.leaderboards_rv_item_image);
+            layout=itemView.findViewById(R.id.leaderboards_rv_layout);
         }
     }
 }

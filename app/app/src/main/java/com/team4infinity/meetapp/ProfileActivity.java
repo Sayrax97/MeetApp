@@ -38,6 +38,7 @@ public class ProfileActivity extends AppCompatActivity {
     StorageReference storage;
     DatabaseReference database;
     FirebaseAuth auth;
+    User user;
     //endregion
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,23 +62,37 @@ public class ProfileActivity extends AppCompatActivity {
         ratedEvents=findViewById(R.id.profile_rated_events);
         attendedEvents=findViewById(R.id.profile_attended_events);
         pointsTextView=findViewById(R.id.profile_points);
-        createdEvents.setText(String.valueOf(getUser().createdEventsID.size()));
-        ratedEvents.setText(String.valueOf(getUser().ratedEventsID.size()));
-        attendedEvents.setText(String.valueOf(getUser().attendedEventsID.size()));
-        fullName.setText(getUser().FullName());
-        email.setText(getUser().email);
-        gender.setText(getUser().gender);
-        date.setText(getUser().birthDate);
-        pointsTextView.setText(getUser().points+" stars");
         storage=FirebaseStorage.getInstance().getReference();
         database=FirebaseDatabase.getInstance().getReference();
         auth=FirebaseAuth.getInstance();
         //endregion
 
-        //region Storage
-        storage.child("users").child(getUser().uID).child("profile").getDownloadUrl().addOnSuccessListener(uri -> {
-            Picasso.with(this).load(uri).fit().into(profileImage);
-        });
+
+        //region Intent
+        Intent intent=getIntent();
+        if(intent.getStringExtra("type").compareTo("other")==0){
+            database.child("users").child(intent.getStringExtra("key")).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    user=dataSnapshot.getValue(User.class);
+                    user.uID=auth.getCurrentUser().getUid();
+                    setValues();
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+        }
+        else {
+            user=getUser();
+            user.uID=auth.getCurrentUser().getUid();
+            setValues();
+        }
+        //endregion
+
+
 
         //endregion
 
@@ -105,5 +120,25 @@ public class ProfileActivity extends AppCompatActivity {
 
     private User getUser(){
         return Singleton.getInstance().getUser();
+    }
+
+    private void setValues(){
+        //region Set
+        createdEvents.setText(String.valueOf(user.createdEventsID.size()));
+        ratedEvents.setText(String.valueOf(user.ratedEventsID.size()));
+        attendedEvents.setText(String.valueOf(user.attendedEventsID.size()));
+        fullName.setText(user.FullName());
+        email.setText(user.email);
+        gender.setText(user.gender);
+        date.setText(user.birthDate);
+        pointsTextView.setText(user.points+" stars");
+        //endregion
+
+
+        //region Storage
+        storage.child("users").child(user.uID).child("profile").getDownloadUrl().addOnSuccessListener(uri -> {
+            Picasso.with(this).load(uri).fit().into(profileImage);
+        });
+
     }
 }

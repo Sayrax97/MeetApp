@@ -86,6 +86,8 @@ public class EventsActivity extends AppCompatActivity {
             switch (item.getItemId()){
                 case R.id.nb_profile:{
                     Intent intent=new Intent(that,ProfileActivity.class);
+                    intent.putExtra("key",auth.getCurrentUser().getUid());
+                    intent.putExtra("type","loggedIn");
                     that.startActivity(intent);
                     break;
                 }
