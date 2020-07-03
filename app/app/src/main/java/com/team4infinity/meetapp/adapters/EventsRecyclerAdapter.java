@@ -65,6 +65,7 @@ public class EventsRecyclerAdapter extends RecyclerView.Adapter<EventsRecyclerAd
                 else{
                     Singleton.getInstance().getUser().bookmarkedEventsID.remove(events.get(position).key);
                     database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").setValue(Singleton.getInstance().getUser().bookmarkedEventsID);
+
                 }
             }
         });

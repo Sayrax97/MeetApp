@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -12,6 +13,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.LocationListener;
@@ -21,6 +23,9 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ImageSpan;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -54,6 +59,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
@@ -147,8 +153,10 @@ public class MainActivity extends Activity {
         //region BottomNavBar
         bottomNav.setOnNavigationItemSelectedListener(item -> {
             switch (item.getItemId()){
-                case R.id.nb_profile:{
+                    case R.id.nb_profile:{
                     Intent intent=new Intent(that,ProfileActivity.class);
+                    intent.putExtra("key",auth.getCurrentUser().getUid());
+                    intent.putExtra("type","loggedIn");
                     that.startActivity(intent);
                     break;
                 }
@@ -163,6 +171,37 @@ public class MainActivity extends Activity {
                     intent.putExtra("Activity","bookmark");
                     that.startActivity(intent);
                     break;
+                }
+                case R.id.nb_options:{
+                    MaterialAlertDialogBuilder dialogBuilder=new MaterialAlertDialogBuilder(that);
+                    dialogBuilder.setTitle(R.string.options).setItems(isMyServiceRunning(MyService.class)?new CharSequence[]{menuIconWithText(getResources().getDrawable(R.drawable.ranking,null),"Leaderboards"),
+                                    menuIconWithText(getResources().getDrawable(R.drawable.ic_baseline_rss_feed_24,null),"Turn off service"), menuIconWithText(getResources().getDrawable(R.drawable.logout,null),"Logout")}:
+                                    new CharSequence[]{menuIconWithText(getResources().getDrawable(R.drawable.ranking,null),"Leaderboards"), menuIconWithText(getResources().getDrawable(R.drawable.ic_baseline_rss_feed_24,null),"Turn on service"),
+                                            menuIconWithText(getResources().getDrawable(R.drawable.logout,null),"Logout")},
+                            (dialog, which) -> {
+                        switch (which){
+                            case 0:{
+                                startActivity(new Intent(that,LeaderboardsActivity.class));
+                                break;
+                            }
+                            case 1:{
+                                Intent intent=new Intent(that, MyService.class);
+                                if(isMyServiceRunning(MyService.class)){
+                                    stopService(intent);
+                                }
+                                else {
+                                    startService(intent);
+                                }
+                                break;
+                            }
+                            case 2:{
+                                auth.signOut();
+                                Intent intent=new Intent(this,LoginActivity.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(intent);
+                            }
+                        }
+                    }).show().setOnDismissListener(dialog ->bottomNav.setSelectedItemId(R.id.nb_map));
                 }
             }
             return true;
@@ -241,18 +280,6 @@ public class MainActivity extends Activity {
         });
         fabAdd=findViewById(R.id.fab_add);
         fabAdd.setOnClickListener(v -> startActivityForResult(new Intent(MainActivity.this,CreateEventActivity.class),1));
-        fabService=findViewById(R.id.fab_service);
-        fabService.setOnClickListener(v -> {
-            Intent intent=new Intent(that, MyService.class);
-            if(!isMyServiceRunning(MyService.class)){
-                Toast.makeText(that, "Starting service", Toast.LENGTH_SHORT).show();
-                startService(intent);
-            }
-            else {
-                Toast.makeText(that, "Stopping service", Toast.LENGTH_SHORT).show();
-                stopService(intent);
-            }
-        });
         //endregion
 
 
@@ -821,6 +848,7 @@ public class MainActivity extends Activity {
        else
            return null;
     }
+
     private boolean isMyServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
@@ -829,6 +857,16 @@ public class MainActivity extends Activity {
             }
         }
         return false;
+    }
+
+    private CharSequence menuIconWithText(Drawable r, String title) {
+
+        r.setBounds(0, 0, 50,50);
+        SpannableString sb = new SpannableString("    " + title);
+        ImageSpan imageSpan = new ImageSpan(r, ImageSpan.ALIGN_BOTTOM);
+        sb.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        return sb;
     }
     //endregion
 }

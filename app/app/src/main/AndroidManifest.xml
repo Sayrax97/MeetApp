@@ -14,12 +14,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".LeaderboardsActivity"></activity>
+
         <service
             android:name=".MyService"
-            android:enabled="true"
-            android:exported="true"></service>
-        <service
-            android:name=".Service"
             android:enabled="true"
             android:exported="true" />
 
@@ -28,7 +26,8 @@
             android:name=".EventActivity"
             android:theme="@style/AppThemeMat" />
         <activity android:name=".FilterActivity" />
-        <activity android:name=".EventsActivity" />
+        <activity android:name=".EventsActivity"
+            android:theme="@style/AppThemeMat" />
         <activity android:name=".ProfileActivity" />
         <activity android:name=".Popunjavanje" />
         <activity android:name=".CreateEventActivity" />
