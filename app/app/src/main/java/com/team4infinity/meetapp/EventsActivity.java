@@ -61,25 +61,22 @@ public class EventsActivity extends AppCompatActivity {
         //endregion
         //region BottomNavBar
         bottomNav.setSelectedItemId(R.id.nb_events);
-        bottomNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                switch (item.getItemId()){
-                    case R.id.nb_profile:{
-                        Intent intent=new Intent(that,ProfileActivity.class);
-                        that.startActivity(intent);
-                        break;
-                    }
-                    case R.id.nb_map:{
-                        Intent openMainActivity = new Intent(that, MainActivity.class);
-                        openMainActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                        startActivityIfNeeded(openMainActivity, 0);
-                        finish();
-                        break;
-                    }
+        bottomNav.setOnNavigationItemSelectedListener(item -> {
+            switch (item.getItemId()){
+                case R.id.nb_profile:{
+                    Intent intent=new Intent(that,ProfileActivity.class);
+                    that.startActivity(intent);
+                    break;
                 }
-                return true;
+                case R.id.nb_map:{
+                    Intent openMainActivity = new Intent(that, MainActivity.class);
+                    openMainActivity.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                    startActivityIfNeeded(openMainActivity, 0);
+                    finish();
+                    break;
+                }
             }
+            return true;
         });
         //endregion
 

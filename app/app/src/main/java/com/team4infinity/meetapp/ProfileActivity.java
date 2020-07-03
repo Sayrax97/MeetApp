@@ -83,23 +83,23 @@ public class ProfileActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.profile_menu,menu);
-        return true;
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        getMenuInflater().inflate(R.menu.profile_menu,menu);
+//        return true;
+//    }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId()==android.R.id.home){
             finish();
         }
-        else if(item.getItemId()==R.id.logout){
-            auth.signOut();
-            Intent intent=new Intent(this,LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-        }
+//        else if(item.getItemId()==R.id.logout){
+//            auth.signOut();
+//            Intent intent=new Intent(this,LoginActivity.class);
+//            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//            startActivity(intent);
+//        }
         return super.onOptionsItemSelected(item);
     }
 

@@ -18,5 +18,9 @@
         android:icon="@drawable/profile_filled"
         android:title="@string/profile"
         app:showAsAction="always"/>
+    <item android:id="@+id/nb_options"
+        android:icon="@drawable/options"
+        android:title="@string/options"
+        app:showAsAction="always"/>
 
 </menu>
