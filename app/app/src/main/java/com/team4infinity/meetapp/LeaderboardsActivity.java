@@ -49,7 +49,7 @@ public class LeaderboardsActivity extends AppCompatActivity {
         }
         //endregion
 
-        database.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
+        database.child("users").addValueEventListener(new ValueEventListener() {
             @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {

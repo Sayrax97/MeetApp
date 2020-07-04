@@ -370,29 +370,27 @@ public class MainActivity extends Activity {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         Singleton.getInstance().categories = dataSnapshot.getValue(CategoryList.class);
-                        for (String s : getCategories()) {
+                        for (String category : getCategories()) {
                             final Chip chip = (Chip) MainActivity.this.getLayoutInflater().inflate(R.layout.item_chip_layout, null, false);
-                            chip.setText(s);
+                            chip.setText(category);
                             chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
                                 if (isChecked)
                                 {
-                                    getEvents();
-                                    Toast.makeText(that, "" + chip.getText() + " checked", Toast.LENGTH_SHORT).show();
-                                    filterEvents(s);
-                                }
-                                else
-                                {
-                                    Toast.makeText(that, chip.getText() + " unchecked", Toast.LENGTH_SHORT).show();
-                                    showEvents();
+                                    filterEvents(category);
                                 }
                             });
-                            storage.child(FIREBASE_CHILD_CAT).child(s.toLowerCase()+".png").getBytes(ONE_MEGA_BYTE).addOnCompleteListener(task -> {
+                            storage.child(FIREBASE_CHILD_CAT).child(category.toLowerCase()+".png").getBytes(ONE_MEGA_BYTE).addOnCompleteListener(task -> {
                                 byte[] data = task.getResult();
                                 Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
                                 chip.setChipIcon(new BitmapDrawable(getResources(),bmp));
                                 chipGroup.addView(chip);
                             });
                         }
+                        chipGroup.setOnCheckedChangeListener((group, checkedId) -> {
+                            if(checkedId==-1){
+                                showEvents();
+                            }
+                        });
                     }
 
                 @Override
@@ -405,30 +403,24 @@ public class MainActivity extends Activity {
             for (String s : getCategories()) {
                 final Chip chip = (Chip) MainActivity.this.getLayoutInflater().inflate(R.layout.item_chip_layout, null, false);
                 chip.setText(s);
-                chip.setText(s);
                 chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
                     if (isChecked)
                     {
-                        getEvents();
-                        Toast.makeText(that, "" + chip.getText() + " checked", Toast.LENGTH_SHORT).show();
                         filterEvents(s);
                     }
-                    else
-                    {
-                        Toast.makeText(that, chip.getText() + " unchecked", Toast.LENGTH_SHORT).show();
-                        showEvents();
-                    }
                 });
-                storage.child(FIREBASE_CHILD_CAT).child(s.toLowerCase()+".png").getBytes(ONE_MEGA_BYTE).addOnCompleteListener(new OnCompleteListener<byte[]>() {
-                    @Override
-                    public void onComplete(@NonNull Task<byte[]> task) {
-                        byte[] data = task.getResult();
-                        Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-                        chip.setChipIcon(new BitmapDrawable(getResources(),bmp));
-                        chipGroup.addView(chip);
-                    }
+                storage.child(FIREBASE_CHILD_CAT).child(s.toLowerCase()+".png").getBytes(ONE_MEGA_BYTE).addOnCompleteListener(task -> {
+                    byte[] data = task.getResult();
+                    Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+                    chip.setChipIcon(new BitmapDrawable(getResources(),bmp));
+                    chipGroup.addView(chip);
                 });
             }
+            chipGroup.setOnCheckedChangeListener((group, checkedId) -> {
+                if(checkedId==-1){
+                    showEvents();
+                }
+            });
         }
     }
 
