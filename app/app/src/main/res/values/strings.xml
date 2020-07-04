@@ -104,5 +104,6 @@
     <string name="points">Points</string>
     <string name="options">Options</string>
     <string name="add_friend">Add Friend</string>
+    <string name="am_out">I\'m out</string>
 
 </resources>

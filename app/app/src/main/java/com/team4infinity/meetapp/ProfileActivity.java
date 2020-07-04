@@ -75,7 +75,7 @@ public class ProfileActivity extends AppCompatActivity {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     user=dataSnapshot.getValue(User.class);
-                    user.uID=auth.getCurrentUser().getUid();
+                    user.uID=intent.getStringExtra("key");
                     setValues();
                 }
 
