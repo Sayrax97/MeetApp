@@ -148,6 +148,17 @@ public class MainActivity extends Activity {
         popUpBtn=findViewById(R.id.popupBtn);
         bottomNav.setSelectedItemId(R.id.nb_map);
         chipGroup=findViewById(R.id.categories_chip_group);
+        final Chip chip = (Chip) MainActivity.this.getLayoutInflater().inflate(R.layout.item_chip_layout, null, false);
+        chip.setText(R.string.my_events);
+        chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked)
+            {
+                Toast.makeText(that, "My events selected", Toast.LENGTH_SHORT).show();
+                filterMyEvents();
+            }
+        });
+        chip.setChipIcon(getResources().getDrawable(R.drawable.user,null));
+        chipGroup.addView(chip);
         //endregion
 
         //region BottomNavBar
@@ -304,7 +315,6 @@ public class MainActivity extends Activity {
             }
         });
         showEventsInit();
-        //showEvents();
         setUpMapClick();
 
         Singleton.getInstance().loadUser();
@@ -336,6 +346,9 @@ public class MainActivity extends Activity {
             case PERMISSION_ACCESS_FINE_LOCATION: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     setMyLocationOverlay();
+                }
+                else {
+                    finish();
                 }
                 return;
             }
@@ -517,7 +530,6 @@ public class MainActivity extends Activity {
     private void showEventsInit(){
         final ArrayList<OverlayItem> items = new ArrayList<>();
         removeOverlays();
-        Event e = new Event();
         if (getEvents().isEmpty())
         {
             database.child("events").addChildEventListener(new ChildEventListener() {
@@ -531,12 +543,9 @@ public class MainActivity extends Activity {
                     item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
                     items.add(item);
                     Marker m= new Marker(map);
-                    m.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
-                        @Override
-                        public boolean onMarkerClick(Marker marker, MapView mapView) {
-                            m.closeInfoWindow();
-                            return false;
-                        }
+                    m.setOnMarkerClickListener((marker, mapView) -> {
+                        m.closeInfoWindow();
+                        return false;
                     });
                     m.setTextLabelBackgroundColor(Color.TRANSPARENT);
                     m.setTextIcon(e.getTitle());
@@ -800,6 +809,7 @@ public class MainActivity extends Activity {
                     address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
                     popupTextView1.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
                     popupTextView2.setText(address.getLocality());
+                    popUpTextView3.setText("");
                     popUpCardView.setVisibility(View.VISIBLE);
 
                 } catch (IOException e) {
@@ -859,6 +869,68 @@ public class MainActivity extends Activity {
         sb.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         return sb;
+    }
+
+    private void filterMyEvents(){
+        final ArrayList<OverlayItem> items = new ArrayList<>();
+        removeOverlays();
+        for (Event e:getEvents()) {
+            if(e.attendeesID.contains(auth.getCurrentUser().getUid()))
+            {
+                OverlayItem item = new OverlayItem(e.title, e.key,new GeoPoint(e.lat,e.lon));
+                item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
+                items.add(item);
+                Marker m= new Marker(map);
+                m.setOnMarkerClickListener((marker, mapView) -> {
+                    m.closeInfoWindow();
+                    return false;
+                });
+                m.setTextLabelBackgroundColor(Color.TRANSPARENT);
+                m.setTextIcon(e.getTitle());
+                m.setPosition(new GeoPoint(e.lat,e.lon));
+                map.getOverlays().add(m);
+            }
+        }
+        eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+            @Override
+            public boolean onItemSingleTapUp(int index, OverlayItem item) {
+                Address address;
+                IGeoPoint p = item.getPoint();
+                popUpBtn.setText(R.string.view_event);
+                cancelBtn.setOnClickListener(v -> {
+                    popUpCardView.setVisibility(View.INVISIBLE);
+
+                });
+                popUpBtn.setOnClickListener(v -> {
+                    popUpCardView.setVisibility(View.INVISIBLE);
+                    Intent intent=new Intent(that,EventActivity.class);
+                    intent.putExtra("key",item.getSnippet());
+                    startActivity(intent);
+                });
+
+                try {
+                    address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
+                    popupTextView1.setText(item.getTitle());
+                    popupTextView2.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
+                    popUpCardView.setVisibility(View.VISIBLE);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                return false;
+            }
+
+            @Override
+            public boolean onItemLongPress(int index, OverlayItem item) {
+//                Intent i = new Intent(MyPlacesMapsActivity.this, ViewMyPlaceActivity.class);
+//                i.putExtra("position", index);
+//                startActivityForResult(i, 5);
+                return true;
+            }
+        }, getApplicationContext());
+        map.getOverlays().add(eventsOverlay);
+        map.invalidate();
     }
     //endregion
 }

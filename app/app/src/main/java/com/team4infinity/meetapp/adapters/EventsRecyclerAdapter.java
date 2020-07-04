@@ -74,10 +74,10 @@ public class EventsRecyclerAdapter extends RecyclerView.Adapter<EventsRecyclerAd
                 }
                 else{
                     Singleton.getInstance().getUser().bookmarkedEventsID.remove(events.get(position).key);
-                    events.remove(position);
                     database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").setValue(Singleton.getInstance().getUser().bookmarkedEventsID);
                     holder.bookmarkImageView.setImageResource(R.drawable.bookmark);
                     if(key=="bookmark") {
+                        events.remove(position);
                         notifyItemRemoved(position);
                         //notifyItemRangeChanged(position, events.size());
                     }

@@ -64,9 +64,11 @@ public class EventActivity extends AppCompatActivity {
     private StorageReference storage;
     private FirebaseAuth auth;
     private DatabaseReference database;
+    private BottomSheetBehavior bottomSheetBehavior;
     private ArrayList<Uri> uris;
     private ArrayList<Uri> attendeesImagesUris;
-    private ArrayList<String > attendeesNames;
+    private ArrayList<User > attendees;
+    private boolean isAnAttendee;
 
     //endregion
     @SuppressLint("SetTextI18n")
@@ -93,7 +95,7 @@ public class EventActivity extends AppCompatActivity {
         eventButton=findViewById(R.id.event_button);
         eOccupancyTextView=findViewById(R.id.event_occupancy);
         bottomSheetLinearLayout=findViewById(R.id.bottom_sheet);
-        BottomSheetBehavior bottomSheetBehavior=BottomSheetBehavior.from(bottomSheetLinearLayout);
+        bottomSheetBehavior=BottomSheetBehavior.from(bottomSheetLinearLayout);
         galleryViewAllTextView=findViewById(R.id.gallery_view_all);
         galleryHorizontalScrollView=findViewById(R.id.gallery_hsv);
         attendeesHorizontalScrollView =findViewById(R.id.atendees_hsv);
@@ -102,11 +104,12 @@ public class EventActivity extends AppCompatActivity {
         auth=FirebaseAuth.getInstance();
         database= FirebaseDatabase.getInstance().getReference();
         uris=new ArrayList<>();
+        isAnAttendee=false;
         //endregion
 
         //region GetEvent
         Intent eventIntent=getIntent();
-        String eventkey=eventIntent.getStringExtra("Activity");
+        String eventkey=eventIntent.getStringExtra("key");
         int index=Singleton.getInstance().getEventKeyIndexer().get(eventkey);
         event=Singleton.getInstance().getEvents().get(index);
         //endregion
@@ -123,7 +126,7 @@ public class EventActivity extends AppCompatActivity {
         //region SetText
         eAddressTextView.setText(event.getAddress());
         eDateTextView.setText(event.getDateTime());
-        eRatingTextView.setText(String.valueOf(String.format("%.2f", event.getRating())));
+        eRatingTextView.setText(String.format("%.2f", event.getRating()));
         if(event.getPrice()>0)
         ePriceTextView.setText(getText(R.string.price).toString()+" "+event.getPrice());
         else {
@@ -159,25 +162,7 @@ public class EventActivity extends AppCompatActivity {
         });
         //endregion
 
-        //region EventButton
-        if(event.getCreatorID().compareTo(auth.getCurrentUser().getUid())==0){
-            eventButton.setEnabled(false);
-            eventButton.setText(R.string.creator);
-        }
-        else if(event.getMaxOccupancy()==event.attendeesID.size()){
-            eventButton.setEnabled(false);
-            eventButton.setText(R.string.event_full);
-        }
-        else {
-            disableButtonIfAttendee();
-        }
-        eventButton.setOnClickListener(v -> {
-            updateUserAttendedEventsID(event.getKey());
-            updateEventAttendeesID(event.getKey());
-            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-
-        });
-        //endregion
+        setUpEventButton();
 
         ratingBar.setOnRatingBarChangeListener((ratingBar, rating, fromUser) -> {
             if(fromUser){
@@ -314,13 +299,21 @@ public class EventActivity extends AppCompatActivity {
             Intent intent=new Intent(that,EventGalleryActivity.class);
             intent.putExtra("uris",uris);
             intent.putExtra("key",event.getKey());
+            intent.putExtra("creator",event.getCreatorID());
             startActivity(intent);
         });
         loadAtendees();
         attendeesViewAllTextView.setOnClickListener(v -> {
+            ArrayList<String> attendeeNames=new ArrayList<>();
+            for (User u:attendees) {
+                attendeeNames.add(u.firstName+" "+u.lastName);
+            }
             MaterialAlertDialogBuilder materialAlertDialogBuilder=new MaterialAlertDialogBuilder(that);
-            materialAlertDialogBuilder.setTitle("Attendees of "+event.getTitle()).setItems(attendeesNames.toArray(new CharSequence[]{}),(dialog, which) -> {
-
+            materialAlertDialogBuilder.setTitle("Attendees of "+event.getTitle()).setItems(attendeeNames.toArray(new CharSequence[]{}),(dialog, which) -> {
+                Intent intent=new Intent(that,ProfileActivity.class);
+                intent.putExtra("type","other");
+                intent.putExtra("key",attendees.get(which).uID);
+                startActivity(intent);
             }).show();
         });
     }
@@ -412,15 +405,15 @@ public class EventActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void loadAtendees() {
         attendeesHorizontalScrollView.removeAllViews();
-        attendeesNames= new ArrayList<>();
+        attendees= new ArrayList<>();
         attendeesImagesUris=new ArrayList<>();
         event.getAttendeesID().forEach(uid -> {
-            Log.d(TAG, "loadAtendees: "+uid);
             database.child(FIREBASE_CHILD_USER).child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     User user=dataSnapshot.getValue(User.class);
-                    attendeesNames.add(user.firstName+" "+user.lastName);
+                    user.uID=uid;
+                    attendees.add(user);
                 }
 
                 @Override
@@ -441,11 +434,41 @@ public class EventActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void disableButtonIfAttendee(){
+    private void changeButtonIfAttendee(){
         event.getAttendeesID().forEach(uid -> {
             if(uid.compareTo(auth.getCurrentUser().getUid())==0){
-                eventButton.setEnabled(false);
-                eventButton.setText(R.string.already_attendee);
+                isAnAttendee=true;
+                eventButton.setText(R.string.am_out);
+                eventButton.setOnClickListener(v -> {
+                    database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("attendedEventsID").addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            ArrayList<String> attendees= (ArrayList<String>) dataSnapshot.getValue();
+                            attendees.remove(event.getKey());
+                            database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("attendedEventsID").setValue(attendees);
+
+                            database.child(FIREBASE_EVENT_CHILD).child(event.getKey()).child("attendeesID").addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                    ArrayList<String> attendees= (ArrayList<String>) dataSnapshot.getValue();
+                                    attendees.remove(auth.getCurrentUser().getUid());
+                                    database.child(FIREBASE_EVENT_CHILD).child(event.getKey()).child("attendeesID").setValue(attendees).addOnSuccessListener(aVoid -> loadEvent());
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+                });
+
             }
         });
     }
@@ -455,8 +478,31 @@ public class EventActivity extends AppCompatActivity {
         int index=Singleton.getInstance().getEventKeyIndexer().get(event.getKey());
         event=Singleton.getInstance().getEvents().get(index);
         loadAtendees();
-        disableButtonIfAttendee();
+        setUpEventButton();
         eOccupancyTextView.setText(getText(R.string.occupancy)+" "+event.attendeesID.size()+"/"+event.getMaxOccupancy());
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void setUpEventButton(){
+        eventButton.setText(R.string.count_me);
+        if(event.getCreatorID().compareTo(auth.getCurrentUser().getUid())==0){
+            eventButton.setEnabled(false);
+            eventButton.setText(R.string.creator);
+        }
+        else if(event.getMaxOccupancy()==event.attendeesID.size()){
+            eventButton.setEnabled(false);
+            eventButton.setText(R.string.event_full);
+        }
+        else {
+            changeButtonIfAttendee();
+        }
+        if (!isAnAttendee) {
+            eventButton.setOnClickListener(v -> {
+                updateUserAttendedEventsID(event.getKey());
+                updateEventAttendeesID(event.getKey());
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            });
+        }
     }
 
 }

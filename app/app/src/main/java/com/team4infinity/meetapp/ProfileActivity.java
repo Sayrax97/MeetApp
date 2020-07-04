@@ -96,7 +96,7 @@ public class ProfileActivity extends AppCompatActivity {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     user=dataSnapshot.getValue(User.class);
-                    user.uID=auth.getCurrentUser().getUid();
+                    user.uID=intent.getStringExtra("key");
                     setValues();
                 }
 
@@ -142,13 +142,15 @@ public class ProfileActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
             case -1:{
-                database.child(FIREBASE_CHILD_USER).child(user.uID).child("pendingRequests").child("" + (Singleton.getInstance().getUser().pendingRequests.size() - 1)).setValue(Singleton.getInstance().getUser().uID);
+                database.child(FIREBASE_CHILD_USER).child(user.uID).child("pendingRequests").child("" + (Singleton.getInstance().getUser().pendingRequests.size())).setValue(Singleton.getInstance().getUser().uID);
+                break;
             }
             case R.id.go_to_profile:{
                 getEmails();
+                break;
             }
             case R.id.pending_request:{
-
+                break;
             }
         }
         return super.onOptionsItemSelected(item);
@@ -164,8 +166,8 @@ public class ProfileActivity extends AppCompatActivity {
                 ArrayList<User> users=new ArrayList<>();
                 for(DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                     User user = userSnapshot.getValue(User.class);
-                    if(user.uID!=Singleton.getInstance().getUser().uID) {
-                        user.uID = userSnapshot.getKey();
+                    user.uID = userSnapshot.getKey();
+                    if(user.uID!=Singleton.getInstance().getUser().uID){
                         searchables.add(new EmailSearchModel(user.email));
                         emailHash.put(user.email, user.uID);
                     }

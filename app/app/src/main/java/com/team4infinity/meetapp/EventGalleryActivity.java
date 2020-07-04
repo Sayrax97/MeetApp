@@ -20,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
@@ -35,16 +36,20 @@ public class EventGalleryActivity extends AppCompatActivity {
     private ArrayList<Uri> uris;
     private Context that=this;
     private String eventID;
+    private String creatorID;
     private StorageReference storage;
+    private FirebaseAuth auth;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event_gallery);
         galleryLinearLayout=findViewById(R.id.event_gallery_linear_layout);
         storage = FirebaseStorage.getInstance().getReference();
+        auth=FirebaseAuth.getInstance();
         if(getIntent()!=null){
             uris= (ArrayList<Uri>) getIntent().getSerializableExtra("uris");
             eventID=getIntent().getStringExtra("key");
+            creatorID=getIntent().getStringExtra("creator");
         }
         //region Action bar
         if (getSupportActionBar()!=null){
@@ -53,6 +58,8 @@ public class EventGalleryActivity extends AppCompatActivity {
             getSupportActionBar().setTitle("Gallery");
         }
         //endregion
+
+        //region Load Gallery
         for (Uri uri:uris) {
             ImageView imageView = new ImageView(that);
             imageView.setOnClickListener(v -> {
@@ -67,10 +74,12 @@ public class EventGalleryActivity extends AppCompatActivity {
                     LinearLayout.LayoutParams.WRAP_CONTENT));
             galleryLinearLayout.addView(imageView);
         }
+        //endregion
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        if(creatorID.compareTo(auth.getCurrentUser().getUid())==0)
         menu.add(0,0,1,menuIconWithText(getResources().getDrawable(R.drawable.plus_blue,null),"Add new photo"));
         return super.onCreateOptionsMenu(menu);
     }
