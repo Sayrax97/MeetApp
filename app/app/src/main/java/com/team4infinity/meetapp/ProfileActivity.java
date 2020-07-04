@@ -1,13 +1,21 @@
 package com.team4infinity.meetapp;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ImageSpan;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -26,9 +34,18 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
+import com.team4infinity.meetapp.adapters.LeaderboardsAdapter;
+import com.team4infinity.meetapp.models.EmailSearchModel;
 import com.team4infinity.meetapp.models.User;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+
 import de.hdodenhof.circleimageview.CircleImageView;
+import ir.mirrajabi.searchdialog.SimpleSearchDialogCompat;
+import ir.mirrajabi.searchdialog.core.Searchable;
 
 public class ProfileActivity extends AppCompatActivity {
     //region Members
@@ -39,6 +56,9 @@ public class ProfileActivity extends AppCompatActivity {
     DatabaseReference database;
     FirebaseAuth auth;
     User user;
+    private static final String FIREBASE_CHILD_USER ="users";
+    private HashMap<String,String> emailHash=new HashMap<>();
+    private String key;
     //endregion
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +90,8 @@ public class ProfileActivity extends AppCompatActivity {
 
         //region Intent
         Intent intent=getIntent();
-        if(intent.getStringExtra("type").compareTo("other")==0){
+        key=intent.getStringExtra("type");
+        if(key.compareTo("other")==0){
             database.child("users").child(intent.getStringExtra("key")).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -98,24 +119,72 @@ public class ProfileActivity extends AppCompatActivity {
 
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.profile_menu,menu);
-//        return true;
-//    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        if(key.contains("other"))
+            menu.add(0,-1,1,menuIconWithText(getResources().getDrawable(R.drawable.check,null),getResources().getString(R.string.add_friend)));
+        else
+            getMenuInflater().inflate(R.menu.profile_menu,menu);
+        return true;
+    }
+
+    private CharSequence menuIconWithText(Drawable r, String title) {
+
+        r.setBounds(0, 0, 50,50);
+        SpannableString sb = new SpannableString("    " + title);
+        ImageSpan imageSpan = new ImageSpan(r, ImageSpan.ALIGN_BOTTOM);
+        sb.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        return sb;
+    }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId()==android.R.id.home){
-            finish();
+        switch (item.getItemId()){
+            case -1:{
+                database.child(FIREBASE_CHILD_USER).child(user.uID).child("pendingRequests").child("" + (Singleton.getInstance().getUser().pendingRequests.size() - 1)).setValue(Singleton.getInstance().getUser().uID);
+            }
+            case R.id.go_to_profile:{
+                getEmails();
+            }
+            case R.id.pending_request:{
+
+            }
         }
-//        else if(item.getItemId()==R.id.logout){
-//            auth.signOut();
-//            Intent intent=new Intent(this,LoginActivity.class);
-//            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-//            startActivity(intent);
-//        }
         return super.onOptionsItemSelected(item);
+    }
+
+
+    private void getEmails(){
+        ArrayList<Searchable> searchables=new ArrayList<Searchable>();
+        database.child(FIREBASE_CHILD_USER).addListenerForSingleValueEvent(new ValueEventListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ArrayList<User> users=new ArrayList<>();
+                for(DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                    User user = userSnapshot.getValue(User.class);
+                    if(user.uID!=Singleton.getInstance().getUser().uID) {
+                        user.uID = userSnapshot.getKey();
+                        searchables.add(new EmailSearchModel(user.email));
+                        emailHash.put(user.email, user.uID);
+                    }
+                }
+                    new SimpleSearchDialogCompat<Searchable>(ProfileActivity.this,"Search user","use email",null,searchables,
+                            (dialog, item1, position) -> {
+                                Intent intent=new Intent(ProfileActivity.this,ProfileActivity.class);
+                                intent.putExtra("type","other");
+                                intent.putExtra("key",emailHash.get(item1.getTitle()));
+                                startActivity(intent);
+                            }).show();
+
+
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private User getUser(){

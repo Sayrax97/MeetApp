@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,6 +41,8 @@ public class EventsRecyclerAdapter extends RecyclerView.Adapter<EventsRecyclerAd
         database= FirebaseDatabase.getInstance().getReference();
     }
 
+
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -55,17 +58,29 @@ public class EventsRecyclerAdapter extends RecyclerView.Adapter<EventsRecyclerAd
         holder.eventAddress.setText(events.get(position).address);
         holder.eventDate.setText(events.get(position).dateTime);
         holder.eventAttendees.setText(events.get(position).getAttendeesID().size()+"");
+        if(!Singleton.getInstance().getUser().bookmarkedEventsID.contains(events.get(position).key))
+            holder.bookmarkImageView.setImageResource(R.drawable.bookmark);
+
+        else
+            holder.bookmarkImageView.setImageResource(R.drawable.bookmarkx);
+
         holder.bookmarkImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(!Singleton.getInstance().getUser().bookmarkedEventsID.contains(events.get(position).key)) {
                     Singleton.getInstance().getUser().bookmarkedEventsID.add(events.get(position).key);
                     database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").child("" + (Singleton.getInstance().getUser().bookmarkedEventsID.size() - 1)).setValue(events.get(position).key);
+                    holder.bookmarkImageView.setImageResource(R.drawable.bookmarkx);
                 }
                 else{
                     Singleton.getInstance().getUser().bookmarkedEventsID.remove(events.get(position).key);
+                    events.remove(position);
                     database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").setValue(Singleton.getInstance().getUser().bookmarkedEventsID);
-
+                    holder.bookmarkImageView.setImageResource(R.drawable.bookmark);
+                    if(key=="bookmark") {
+                        notifyItemRemoved(position);
+                        //notifyItemRangeChanged(position, events.size());
+                    }
                 }
             }
         });

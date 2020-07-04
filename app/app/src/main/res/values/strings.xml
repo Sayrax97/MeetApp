@@ -104,5 +104,7 @@
     <string name="points">Points</string>
     <string name="options">Options</string>
     <string name="add_friend">Add Friend</string>
+    <string name="go_to_profile">Go to profile</string>
+    <string name="pending_request">Pending requests</string>
 
 </resources>

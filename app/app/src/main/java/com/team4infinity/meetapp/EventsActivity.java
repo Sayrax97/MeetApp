@@ -104,7 +104,7 @@ public class EventsActivity extends AppCompatActivity {
                     if(bottomNav.getSelectedItemId()!=R.id.nb_bookmarks) {
                         events=Singleton.getInstance().getBookmarked();
                         sem=false;
-                        key="bookmarks";
+                        key="bookmark";
                         setRecyclerView(events,key);
                     }
                     break;
@@ -113,7 +113,7 @@ public class EventsActivity extends AppCompatActivity {
                     if(bottomNav.getSelectedItemId()!=R.id.nb_events) {
                         events=Singleton.getInstance().events;
                         sem=true;
-                        key="events";
+                        key="event";
                         setRecyclerView(events,key);
                      }
                     break;
@@ -287,6 +287,7 @@ public class EventsActivity extends AppCompatActivity {
         EventsRecyclerAdapter adapter=new EventsRecyclerAdapter(this,events1,key);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
     }
 //    @RequiresApi(api = Build.VERSION_CODES.N)
 //    private void setRecyclerViewBookmark(){
@@ -294,6 +295,8 @@ public class EventsActivity extends AppCompatActivity {
 //        recyclerView.setAdapter(adapter);
 //        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 //    }
+
+
 
     public static class EventComparator implements Comparator<Event> {
         private String sortBy;
