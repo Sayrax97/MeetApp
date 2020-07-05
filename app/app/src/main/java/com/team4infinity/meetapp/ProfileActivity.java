@@ -35,6 +35,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 import com.team4infinity.meetapp.adapters.LeaderboardsAdapter;
+import com.team4infinity.meetapp.adapters.PendingRequestsAdapter;
 import com.team4infinity.meetapp.models.EmailSearchModel;
 import com.team4infinity.meetapp.models.User;
 
@@ -150,6 +151,8 @@ public class ProfileActivity extends AppCompatActivity {
                 break;
             }
             case R.id.pending_request:{
+                PendingRequestDialog dialog=new PendingRequestDialog();
+                dialog.show(getSupportFragmentManager(),"Request Friends");
                 break;
             }
         }
@@ -167,7 +170,7 @@ public class ProfileActivity extends AppCompatActivity {
                 for(DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                     User user = userSnapshot.getValue(User.class);
                     user.uID = userSnapshot.getKey();
-                    if(user.uID!=Singleton.getInstance().getUser().uID){
+                    if(!user.uID.contains(Singleton.getInstance().getUser().uID) && !Singleton.getInstance().getUser().friends.contains(user.uID)){
                         searchables.add(new EmailSearchModel(user.email));
                         emailHash.put(user.email, user.uID);
                     }
