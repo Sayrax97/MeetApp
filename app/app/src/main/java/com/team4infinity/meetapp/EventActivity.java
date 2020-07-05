@@ -311,11 +311,15 @@ public class EventActivity extends AppCompatActivity {
             MaterialAlertDialogBuilder materialAlertDialogBuilder=new MaterialAlertDialogBuilder(that);
             materialAlertDialogBuilder.setTitle("Attendees of "+event.getTitle()).setItems(attendeeNames.toArray(new CharSequence[]{}),(dialog, which) -> {
                 Intent intent=new Intent(that,ProfileActivity.class);
-                intent.putExtra("type","other");
+                if(attendees.get(which).uID.compareTo(Singleton.getInstance().getUser().uID)==0)
+                    intent.putExtra("type","loggedIn");
+                else
+                    intent.putExtra("type","other");
                 intent.putExtra("key",attendees.get(which).uID);
                 startActivity(intent);
             }).show();
         });
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)

@@ -1,15 +1,19 @@
 package com.team4infinity.meetapp;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Spannable;
@@ -38,6 +42,7 @@ import com.team4infinity.meetapp.adapters.LeaderboardsAdapter;
 import com.team4infinity.meetapp.models.EmailSearchModel;
 import com.team4infinity.meetapp.models.User;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -47,18 +52,24 @@ import de.hdodenhof.circleimageview.CircleImageView;
 import ir.mirrajabi.searchdialog.SimpleSearchDialogCompat;
 import ir.mirrajabi.searchdialog.core.Searchable;
 
+import static com.team4infinity.meetapp.CreateAccountActivity.SELECT_PICTURE;
+
 public class ProfileActivity extends AppCompatActivity {
+    private static final String USER_CHILD ="users";
+    public static final long ONE_MEGABYTE=1024*1024;
+    private static final String FIREBASE_CHILD_USER ="users";
+    private static final Integer SELECT_PICTURE =3;
     //region Members
     CircleImageView profileImage;
-    public static final long ONE_MEGABYTE=1024*1024;
     TextView fullName,email,gender,date,createdEvents,ratedEvents,attendedEvents,pointsTextView;
     StorageReference storage;
     DatabaseReference database;
     FirebaseAuth auth;
     User user;
-    private static final String FIREBASE_CHILD_USER ="users";
     private HashMap<String,String> emailHash=new HashMap<>();
     private String key;
+    private Context that=this;
+
     //endregion
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,6 +121,7 @@ public class ProfileActivity extends AppCompatActivity {
             user=getUser();
             user.uID=auth.getCurrentUser().getUid();
             setValues();
+            setChangeProfileClick();
         }
         //endregion
 
@@ -118,6 +130,7 @@ public class ProfileActivity extends AppCompatActivity {
         //endregion
 
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -152,10 +165,25 @@ public class ProfileActivity extends AppCompatActivity {
             case R.id.pending_request:{
                 break;
             }
+            case android.R.id.home:{
+                finish();
+            }
         }
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode==RESULT_OK){
+            if (requestCode==SELECT_PICTURE){
+                Toast.makeText(that, ""+data.getData(), Toast.LENGTH_LONG).show();
+                Picasso.with(that).load(data.getData()).resize(500,500).onlyScaleDown().centerCrop().into(profileImage);
+                //uploadImage();
+                storage.child(USER_CHILD).child(user.uID).child("profile").putFile(data.getData());
+            }
+        }
+    }
 
     private void getEmails(){
         ArrayList<Searchable> searchables=new ArrayList<Searchable>();
@@ -208,8 +236,31 @@ public class ProfileActivity extends AppCompatActivity {
 
         //region Storage
         storage.child("users").child(user.uID).child("profile").getDownloadUrl().addOnSuccessListener(uri -> {
-            Picasso.with(this).load(uri).fit().into(profileImage);
+            Picasso.with(this).load(uri).resize(800,800).onlyScaleDown().centerCrop().into(profileImage);
         });
 
+    }
+
+    private void setChangeProfileClick() {
+        if(user.uID.compareTo(auth.getCurrentUser().getUid())==0)
+            profileImage.setOnClickListener(v -> {
+                pickImage();
+            });
+    }
+    private void uploadImage(){
+        profileImage.setDrawingCacheEnabled(true);
+        profileImage.buildDrawingCache();
+        Bitmap bitmap = ((BitmapDrawable) profileImage.getDrawable()).getBitmap();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] data = baos.toByteArray();
+        storage.child(USER_CHILD).child(user.uID).child("profile").putBytes(data);
+//        storage.child(USER_CHILD).child(currentUser.getUid()).child("profile").putFile(imageUri);
+    }
+    private void pickImage(){
+        Intent i=new Intent();
+        i.setType("image/*");
+        i.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(i,"Select profile picture"),SELECT_PICTURE);
     }
 }

@@ -1,6 +1,7 @@
 package com.team4infinity.meetapp;
 
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,9 +21,11 @@ import com.team4infinity.meetapp.models.Event;
 import com.team4infinity.meetapp.models.User;
 
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 
 
@@ -38,6 +41,7 @@ public class Singleton {
     private static final String FIREBASE_CHILD_CIT ="cities";
     private static final String FIREBASE_CHILD_USER ="users";
     private static final String FIREBASE_CHILD_EVENT ="events";
+    private static final String FIREBASE_CHILD_EBD ="events_by_date";
     private static final String TAG = "team4infinty.com";
 
 
@@ -107,6 +111,11 @@ public class Singleton {
 
             }
         });
+
+//        Date date=new Date();
+//        SimpleDateFormat simpleDateFormat=new SimpleDateFormat("yyyy/MM/dd");
+//        String dateString=simpleDateFormat.format(date);
+//        database.child(FIREBASE_CHILD_EBD).
 
     }
 

@@ -59,8 +59,13 @@ import org.osmdroid.util.GeoPoint;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -69,9 +74,11 @@ public class CreateEventActivity extends AppCompatActivity {
     private static final String FIREBASE_CHILD_CAT = "categories";
     private static final String FIREBASE_CHILD_CIT = "cities";
     private static final String FIREBASE_CHILD_USER = "users";
+    private static final String FIREBASE_CHILD_EBD = "events_by_date";
     public static final String FIREBASE_CHILD="events";
     private static final int SELECT_PICTURE = 5;
     private static final int SELECT_PICTURE_GALLERY = 6;
+    private static final long ONE_DAY_MS = 86400000;
     private static final String TAG = "CreateEventActivity";
     private FirebaseAuth auth;
     EditText title;
@@ -356,7 +363,11 @@ public class CreateEventActivity extends AppCompatActivity {
                     event.attendeesID=new ArrayList<>();
                 }
                 event.attendeesID.add(auth.getCurrentUser().getUid());
-                addNewEvent();
+                try {
+                    addNewEvent();
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
                 uploadImage();
                 uploadGallery();
                 Intent eventIntent=new Intent();
@@ -438,12 +449,31 @@ public class CreateEventActivity extends AppCompatActivity {
         return Singleton.getInstance().getCities();
     }
 
-    public void addNewEvent(){
+    public void addNewEvent() throws ParseException {
         currEventkey=database.push().getKey();
         event.setKey(currEventkey);
         updateUserAttendedEventsID(currEventkey);
         database.child(FIREBASE_CHILD).child(currEventkey).setValue(event);
         updateUserCreatedEventID(currEventkey);
+        String eventDate=date.getText().toString();
+        SimpleDateFormat simpleDateFormat=new SimpleDateFormat("yyyy/MM/dd");
+        Date date=simpleDateFormat.parse(eventDate);
+        Toast.makeText(this, ""+simpleDateFormat.format(date), Toast.LENGTH_SHORT).show();
+        database.child(FIREBASE_CHILD_EBD).child(simpleDateFormat.format(date)).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ArrayList<String> data= (ArrayList<String>) dataSnapshot.getValue();
+                if(data!=null)
+                    database.child(FIREBASE_CHILD_EBD).child(simpleDateFormat.format(date)).child(data.size()+"").setValue(currEventkey);
+                else
+                    database.child(FIREBASE_CHILD_EBD).child(simpleDateFormat.format(date)).child("0").setValue(currEventkey);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     public void updateUserCreatedEventID(String s){

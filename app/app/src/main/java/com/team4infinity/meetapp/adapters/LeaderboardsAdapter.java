@@ -23,6 +23,7 @@ import com.squareup.picasso.Picasso;
 import com.team4infinity.meetapp.EventActivity;
 import com.team4infinity.meetapp.ProfileActivity;
 import com.team4infinity.meetapp.R;
+import com.team4infinity.meetapp.Singleton;
 import com.team4infinity.meetapp.models.User;
 
 import java.util.ArrayList;
@@ -60,7 +61,10 @@ public class LeaderboardsAdapter extends RecyclerView.Adapter<LeaderboardsAdapte
         });
         holder.layout.setOnClickListener(v -> {
             Intent intent=new Intent(ctx, ProfileActivity.class);
-            intent.putExtra("type","other");
+            if(users.get(position).uID.compareTo(Singleton.getInstance().getUser().uID)==0)
+                intent.putExtra("type","loggedIn");
+            else
+                intent.putExtra("type","other");
             intent.putExtra("key",users.get(position).uID);
             ctx.startActivity(intent);
         });
