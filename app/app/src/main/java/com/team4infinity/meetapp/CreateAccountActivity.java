@@ -34,6 +34,7 @@ import java.util.ArrayList;
 
 public class CreateAccountActivity extends Activity {
     private static final String TAG ="CreateAccountActivity"  ;
+    public static final Integer SELECT_PICTURE=1;
     EditText firstName;
     EditText lastName;
     EditText email;
@@ -48,7 +49,6 @@ public class CreateAccountActivity extends Activity {
     private StorageReference storage;
     public static final String USER_CHILD="users";
     private Context that=this;
-    public static final Integer SELECT_PICTURE=1;
     User user;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -164,7 +164,6 @@ public class CreateAccountActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         if(resultCode==RESULT_OK){
             if (requestCode==SELECT_PICTURE){
-                Toast.makeText(that, ""+data.getData(), Toast.LENGTH_LONG).show();
                 Picasso.with(CreateAccountActivity.this).load(data.getData()).resize(500,500).onlyScaleDown().into(image);
                 imageUri=data.getData();
             }

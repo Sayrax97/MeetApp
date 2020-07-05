@@ -161,6 +161,14 @@ public class MainActivity extends Activity {
         chipGroup.addView(chip);
         //endregion
 
+        //region ServiceStart
+        Intent intentService=new Intent(that, MyService.class);
+        if(!isMyServiceRunning(MyService.class)){
+            startService(intentService);
+            Toast.makeText(that, "Service started in background", Toast.LENGTH_SHORT).show();
+        }
+        //endregion
+
         //region BottomNavBar
         bottomNav.setOnNavigationItemSelectedListener(item -> {
             switch (item.getItemId()){
