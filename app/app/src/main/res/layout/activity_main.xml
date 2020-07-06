@@ -47,14 +47,14 @@
 
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_add"
+        android:id="@+id/fab_friends"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="81dp"
         android:backgroundTint="@color/colorBackWhite"
         android:elevation="10dp"
-        app:tint="@null"
-        android:src="@drawable/plus_blue"
+        app:tint="@color/colorPrimary"
+        android:src="@drawable/friends"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.95"
@@ -69,7 +69,7 @@
         android:src="@drawable/pointer"
         app:layout_anchorGravity="top"
         app:tint="@null"
-        app:layout_constraintBottom_toTopOf="@+id/fab_add"
+        app:layout_constraintBottom_toTopOf="@+id/fab_friends"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.95"
         app:layout_constraintStart_toStartOf="parent"

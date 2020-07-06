@@ -218,7 +218,7 @@
     </LinearLayout>
     <HorizontalScrollView
         android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_height="100dp"
         android:padding="10dp">
         <LinearLayout
             android:id="@+id/gallery_hsv"

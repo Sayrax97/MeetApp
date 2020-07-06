@@ -19,10 +19,13 @@ import android.location.Geocoder;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.preference.PreferenceManager;
+import android.provider.ContactsContract;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ImageSpan;
@@ -54,6 +57,7 @@ import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
@@ -70,9 +74,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Picasso;
 import com.team4infinity.meetapp.adapters.EventAdapterMain;
 import com.team4infinity.meetapp.models.CategoryList;
 import com.team4infinity.meetapp.models.Event;
+import com.team4infinity.meetapp.models.User;
 
 import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
@@ -94,8 +100,13 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 import org.w3c.dom.Text;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
@@ -109,13 +120,14 @@ public class MainActivity extends Activity {
     private static final String FIREBASE_CHILD_CAT = "categories";
     public static final long ONE_MEGA_BYTE=1024*1024;
     private static final String TAG ="MainActivity";
+    private static final String FIREBASE_CHILD_USER ="users" ;
     private FirebaseAuth auth;
     private Context that=this;
     private MapView map=null;
     private IMapController mapController=null;
     private MyLocationNewOverlay myLocationNewOverlay;
     private ChipGroup chipGroup;
-    private FloatingActionButton fabPointer,fabAdd,fabService;
+    private FloatingActionButton fabPointer,fabFriends;
     private TextView popupTextView1,popupTextView2,popUpTextView3;
     private MaterialButton cancelBtn;
     private MaterialButton popUpBtn;
@@ -126,6 +138,9 @@ public class MainActivity extends Activity {
     private DatabaseReference database;
     private StorageReference storage;
     private ItemizedIconOverlay eventsOverlay;
+    private static boolean isFreindsOn;
+    private HashMap<String,Bitmap> friendsBM;
+    private HashMap<String,User> friendsUsers;
     //endregion
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -135,6 +150,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         auth=FirebaseAuth.getInstance();
+        isFreindsOn=false;
         database= FirebaseDatabase.getInstance().getReference();
         storage= FirebaseStorage.getInstance().getReference();
         bottomNav=findViewById(R.id.bottom_nav_bar);
@@ -151,6 +167,9 @@ public class MainActivity extends Activity {
         final Chip chip = (Chip) MainActivity.this.getLayoutInflater().inflate(R.layout.item_chip_layout, null, false);
         chip.setText(R.string.my_events);
         chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
+
+            if (isFreindsOn)
+                showFriends();
             if (isChecked)
             {
                 Toast.makeText(that, "My events selected", Toast.LENGTH_SHORT).show();
@@ -243,6 +262,10 @@ public class MainActivity extends Activity {
                     removeOverlays();
                 }
                 else {
+                    if (isFreindsOn){
+                        showFriendsOnZoom();
+                        return false;
+                    }
                     if (chipGroup!=null)
                     {
                         if(chipGroup.getCheckedChipId()!=-1)
@@ -297,8 +320,8 @@ public class MainActivity extends Activity {
             location();
             setMyLocationOverlay();
         });
-        fabAdd=findViewById(R.id.fab_add);
-        fabAdd.setOnClickListener(v -> startActivityForResult(new Intent(MainActivity.this,CreateEventActivity.class),1));
+        fabFriends=findViewById(R.id.fab_friends);
+        fabFriends.setOnClickListener(v ->showFriends());
         //endregion
 
 
@@ -328,12 +351,19 @@ public class MainActivity extends Activity {
         Singleton.getInstance().loadUser();
     }
 
+
+
     //region Resume/Pause
     @Override
     protected void onResume() {
         super.onResume();
         bottomNav.setSelectedItemId(R.id.nb_map);
-        showEvents();
+        friendsUsers=null;
+        friendsBM=null;
+        if(isFreindsOn)
+            showFriends();
+        else
+            showEvents();
         setUpMapClick();
         showMyLocation();
         map.onResume();
@@ -395,6 +425,8 @@ public class MainActivity extends Activity {
                             final Chip chip = (Chip) MainActivity.this.getLayoutInflater().inflate(R.layout.item_chip_layout, null, false);
                             chip.setText(category);
                             chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                                if(isFreindsOn)
+                                    showFriends();
                                 if (isChecked)
                                 {
                                     filterEvents(category);
@@ -939,6 +971,167 @@ public class MainActivity extends Activity {
         }, getApplicationContext());
         map.getOverlays().add(eventsOverlay);
         map.invalidate();
+    }
+    private void showFriends() {
+
+            if(isFreindsOn){
+                isFreindsOn= false;
+                Drawable drawable=getResources().getDrawable(R.drawable.friends,null);
+                drawable.setTint(getColor(R.color.colorPrimary));
+                fabFriends.setImageDrawable(drawable);
+                showEvents();
+                return;
+            }
+            final ArrayList<OverlayItem> items = new ArrayList<>();
+            removeOverlays();
+            ArrayList<String> friends=Singleton.getInstance().getUser().friends;
+            Drawable drawable=getResources().getDrawable(R.drawable.close,null);
+            drawable.setTint(getColor(R.color.colorPrimary));
+            fabFriends.setImageDrawable(drawable);
+            isFreindsOn=true;
+            if (friendsBM==null)
+                friendsBM=new HashMap<>();
+            if (friendsUsers==null)
+                friendsUsers=new HashMap<>();
+            if (!friends.isEmpty())
+            {
+                for (String uid:friends) {
+                    if(friendsUsers.containsKey(uid)){
+                        User user=friendsUsers.get(uid);
+                        if(user.locLat==0 || user.locLon==0)
+                            return;
+                        OverlayItem item = new OverlayItem(user.firstName+" "+user.lastName, user.uID,new GeoPoint(user.locLat,user.locLon));
+                        Bitmap bitmap1= friendsBM.get(uid);
+                        item.setMarker(new BitmapDrawable(getResources(),bitmap1));
+                        items.add(item);
+                        Overlay overlay= new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+                            @Override
+                            public boolean onItemSingleTapUp(int index, OverlayItem item) {
+                                Toast.makeText(MainActivity.this, "" + item.getTitle(), Toast.LENGTH_SHORT).show();
+                                Intent intent=new Intent(that, ProfileActivity.class);
+                                intent.putExtra("type","other");
+                                intent.putExtra("key",uid);
+                                startActivity(intent);
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onItemLongPress(int index, OverlayItem item) {
+                                return false;
+                            }
+                        }, that);
+                        map.getOverlays().add(overlay);
+                        Marker m= new Marker(map);
+                        m.setOnMarkerClickListener((marker, mapView) -> {
+                            m.closeInfoWindow();
+                            return false;
+                        });
+                        m.setTextLabelBackgroundColor(Color.TRANSPARENT);
+                        m.setTextIcon(user.firstName+" "+user.lastName);
+                        m.setPosition(new GeoPoint(user.locLat,user.locLon));
+                        map.getOverlays().add(m);
+                        map.invalidate();
+                    }
+                    else
+                    storage.child(FIREBASE_CHILD_USER).child(uid).child("profile").getBytes(5*ONE_MEGA_BYTE).addOnSuccessListener(bytes ->
+                            database.child(FIREBASE_CHILD_USER).child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            User user=dataSnapshot.getValue(User.class);
+                            user.uID=uid;
+                            if(user.locLat==0 || user.locLon==0)
+                                return;
+                            OverlayItem item = new OverlayItem(user.firstName+" "+user.lastName, user.uID,new GeoPoint(user.locLat,user.locLon));
+                            Bitmap bitmap=BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                            Bitmap bitmap1= Bitmap.createScaledBitmap(bitmap,100,100,false);
+                            friendsBM.put(uid,bitmap1);
+                            friendsUsers.put(uid,user);
+                            item.setMarker(new BitmapDrawable(getResources(),bitmap1));
+                            items.add(item);
+                            Overlay overlay= new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+                                @Override
+                                public boolean onItemSingleTapUp(int index, OverlayItem item) {
+                                    Toast.makeText(MainActivity.this, "" + item.getTitle(), Toast.LENGTH_SHORT).show();
+                                    Intent intent=new Intent(that, ProfileActivity.class);
+                                    intent.putExtra("type","other");
+                                    intent.putExtra("key",uid);
+                                    startActivity(intent);
+                                    return false;
+                                }
+
+                                @Override
+                                public boolean onItemLongPress(int index, OverlayItem item) {
+                                    return false;
+                                }
+                            }, that);
+                            map.getOverlays().add(overlay);
+                            Marker m= new Marker(map);
+                            m.setOnMarkerClickListener((marker, mapView) -> {
+                                m.closeInfoWindow();
+                                return false;
+                            });
+                            m.setTextLabelBackgroundColor(Color.TRANSPARENT);
+                            m.setTextIcon(user.firstName+" "+user.lastName);
+                            m.setPosition(new GeoPoint(user.locLat,user.locLon));
+                            map.getOverlays().add(m);
+                            map.invalidate();
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    }));
+                    items.clear();
+                }
+            }
+
+    }
+
+    private void showFriendsOnZoom(){
+        final ArrayList<OverlayItem> items = new ArrayList<>();
+        removeOverlays();
+        ArrayList<String> friends=Singleton.getInstance().getUser().friends;
+        if (!friends.isEmpty()) {
+            for (String uid : friends) {
+                if (friendsUsers.containsKey(uid)) {
+                    User user = friendsUsers.get(uid);
+                    if (user.locLat == 0 || user.locLon == 0)
+                        return;
+                    OverlayItem item = new OverlayItem(user.firstName + " " + user.lastName, user.uID, new GeoPoint(user.locLat, user.locLon));
+                    Bitmap bitmap1 = friendsBM.get(uid);
+                    item.setMarker(new BitmapDrawable(getResources(), bitmap1));
+                    items.add(item);
+                    Overlay overlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+                        @Override
+                        public boolean onItemSingleTapUp(int index, OverlayItem item) {
+                            Toast.makeText(MainActivity.this, "" + item.getTitle(), Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(that, ProfileActivity.class);
+                            intent.putExtra("type", "other");
+                            intent.putExtra("key", uid);
+                            startActivity(intent);
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onItemLongPress(int index, OverlayItem item) {
+                            return false;
+                        }
+                    }, that);
+                    map.getOverlays().add(overlay);
+                    Marker m = new Marker(map);
+                    m.setOnMarkerClickListener((marker, mapView) -> {
+                        m.closeInfoWindow();
+                        return false;
+                    });
+                    m.setTextLabelBackgroundColor(Color.TRANSPARENT);
+                    m.setTextIcon(user.firstName + " " + user.lastName);
+                    m.setPosition(new GeoPoint(user.locLat, user.locLon));
+                    map.getOverlays().add(m);
+                    map.invalidate();
+                }
+            }
+        }
     }
     //endregion
 }
