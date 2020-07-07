@@ -14,7 +14,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".LeaderboardsActivity"></activity>
+        <service
+            android:name=".MyMessageingService"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <activity android:name=".LeaderboardsActivity" />
 
         <service
             android:name=".MyService"
@@ -26,7 +35,8 @@
             android:name=".EventActivity"
             android:theme="@style/AppThemeMat" />
         <activity android:name=".FilterActivity" />
-        <activity android:name=".EventsActivity"
+        <activity
+            android:name=".EventsActivity"
             android:theme="@style/AppThemeMat" />
         <activity android:name=".ProfileActivity" />
         <activity android:name=".Popunjavanje" />

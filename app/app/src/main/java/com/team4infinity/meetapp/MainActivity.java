@@ -212,9 +212,9 @@ public class MainActivity extends Activity {
                 }
                 case R.id.nb_options:{
                     MaterialAlertDialogBuilder dialogBuilder=new MaterialAlertDialogBuilder(that);
-                    dialogBuilder.setTitle(R.string.options).setItems(isMyServiceRunning(MyService.class)?new CharSequence[]{menuIconWithText(getResources().getDrawable(R.drawable.ranking,null),"Leaderboards"),
+                    dialogBuilder.setTitle(R.string.options).setItems(isMyServiceRunning(MyService.class)?new CharSequence[]{menuIconWithText(getResources().getDrawable(R.drawable.ranking,null),"Leaderboard"),
                                     menuIconWithText(getResources().getDrawable(R.drawable.ic_baseline_rss_feed_24,null),"Turn off service"), menuIconWithText(getResources().getDrawable(R.drawable.logout,null),"Logout")}:
-                                    new CharSequence[]{menuIconWithText(getResources().getDrawable(R.drawable.ranking,null),"Leaderboards"), menuIconWithText(getResources().getDrawable(R.drawable.ic_baseline_rss_feed_24,null),"Turn on service"),
+                                    new CharSequence[]{menuIconWithText(getResources().getDrawable(R.drawable.ranking,null),"Leaderboard"), menuIconWithText(getResources().getDrawable(R.drawable.ic_baseline_rss_feed_24,null),"Turn on service"),
                                             menuIconWithText(getResources().getDrawable(R.drawable.logout,null),"Logout")},
                             (dialog, which) -> {
                         switch (which){
@@ -358,8 +358,6 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         bottomNav.setSelectedItemId(R.id.nb_map);
-        friendsUsers=null;
-        friendsBM=null;
         if(isFreindsOn)
             showFriends();
         else

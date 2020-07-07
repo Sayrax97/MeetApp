@@ -52,7 +52,9 @@ import com.team4infinity.meetapp.adapters.GridViewImagesAdapter;
 import com.team4infinity.meetapp.models.CategoryList;
 import com.team4infinity.meetapp.models.Cities;
 import com.team4infinity.meetapp.models.Event;
+import com.team4infinity.meetapp.models.NewEvent;
 import com.team4infinity.meetapp.models.User;
+import com.team4infinity.meetapp.rest_api.IService;
 
 import org.osmdroid.util.GeoPoint;
 
@@ -62,12 +64,19 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.chrono.IsoChronology;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class CreateEventActivity extends AppCompatActivity {
     //region Members
@@ -368,6 +377,9 @@ public class CreateEventActivity extends AppCompatActivity {
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
+
+
+                sendNotification(new NewEvent(event.key,event.title,event.lat,event.lon,auth.getCurrentUser().getUid()));
                 uploadImage();
                 uploadGallery();
                 Intent eventIntent=new Intent();
@@ -544,5 +556,29 @@ public class CreateEventActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private void sendNotification(NewEvent event){
+        Retrofit retrofit=new Retrofit.Builder()
+                .baseUrl("https://us-central1-meetapp-33e04.cloudfunctions.net/api/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        IService iService =retrofit.create(IService.class);
+
+        Call<String> call=iService.newEvent(event);
+
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                Log.d(TAG, "onResponse: Works");
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Log.d(TAG, "onFailure: Dead");
+            }
+        });
+
     }
 }
