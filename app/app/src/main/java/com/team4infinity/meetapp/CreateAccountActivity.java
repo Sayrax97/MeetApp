@@ -3,6 +3,7 @@ package com.team4infinity.meetapp;
 import androidx.annotation.NonNull;
 
 import android.app.Activity;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -11,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RadioButton;
@@ -31,6 +33,7 @@ import com.team4infinity.meetapp.models.User;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class CreateAccountActivity extends Activity {
     private static final String TAG ="CreateAccountActivity"  ;
@@ -43,6 +46,7 @@ public class CreateAccountActivity extends Activity {
     RadioGroup gender;
     EditText date;
     ImageView image;
+    ImageView dateImage;
     Uri imageUri;
     private FirebaseAuth auth;
     private DatabaseReference database;
@@ -66,6 +70,7 @@ public class CreateAccountActivity extends Activity {
         gender=findViewById(R.id.GenderCA);
         date= findViewById(R.id.DateCA);
         image=findViewById(R.id.ImageEdit);
+        dateImage=findViewById(R.id.imageDateCA);
         image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -74,6 +79,20 @@ public class CreateAccountActivity extends Activity {
         });
         Button btnCreateAccount=findViewById(R.id.CreateAccount);
         //endregion
+
+        dateImage.setOnClickListener(v -> {
+            Calendar calendar=Calendar.getInstance();
+            int year=calendar.get(Calendar.YEAR);
+            int month=calendar.get(Calendar.MONTH);
+            int day=calendar.get(Calendar.DAY_OF_MONTH);
+            DatePickerDialog datePickerDialog=new DatePickerDialog(CreateAccountActivity.this,new DatePickerDialog.OnDateSetListener() {
+                @Override
+                public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                    date.setText(year+"/"+(month+1)+"/"+dayOfMonth);
+                }
+            }, year,month, day);
+            datePickerDialog.show();
+        });
 
         btnCreateAccount.setOnClickListener(new View.OnClickListener() {
             @Override

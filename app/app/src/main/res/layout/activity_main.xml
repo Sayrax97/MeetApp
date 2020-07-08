@@ -5,13 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
+
     <org.osmdroid.views.MapView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
         android:id="@+id/map"
         tilesource="Mapnik"
-        >
-    </org.osmdroid.views.MapView>
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:layout_editor_absoluteX="10dp"
+        tools:layout_editor_absoluteY="42dp"></org.osmdroid.views.MapView>
 
     <HorizontalScrollView
         android:id="@+id/horizontalScrollView"
@@ -178,16 +179,17 @@
                 app:layout_constraintHorizontal_bias="0.95"
                 app:layout_constraintStart_toEndOf="@+id/popupCancel">
             </com.google.android.material.button.MaterialButton>
+
             <ImageView
                 android:id="@+id/popupBookmark"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:src="@drawable/bookmark_plus"
                 app:layout_constraintBottom_toBottomOf="@id/popupWindowConstLayout"
                 app:layout_constraintEnd_toEndOf="@+id/popupWindowConstLayout"
+                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="@+id/popupWindowConstLayout"
                 app:layout_constraintTop_toTopOf="@+id/popupWindowConstLayout"
-                app:layout_constraintHorizontal_bias="0.99"
+                app:layout_constraintVertical_bias="0.466"
                 />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>

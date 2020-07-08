@@ -23,6 +23,9 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_weight="4"
+            android:textSize="25dp"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
             android:id="@+id/request_username"/>
         <ImageView
             android:layout_width="50dp"

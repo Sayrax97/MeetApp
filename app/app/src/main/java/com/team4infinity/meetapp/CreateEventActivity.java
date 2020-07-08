@@ -89,7 +89,7 @@ public class CreateEventActivity extends AppCompatActivity {
     EditText price;
     EditText specialReq;
     EditText maxOccupancy;
-    MaterialSpinner citySpinner;
+    EditText citySpinner;
     MaterialSpinner categoriesSpinner;
     ImageView dateImg;
     ImageView  timeImg;
@@ -194,35 +194,6 @@ public class CreateEventActivity extends AppCompatActivity {
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             adapter.notifyDataSetChanged();
             categoriesSpinner.setAdapter(adapter);
-        }
-        //endregion
-
-        //region GET CITIES
-        if(getCities().isEmpty())
-        {
-            database.child(FIREBASE_CHILD_CIT).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Singleton.getInstance().cities=dataSnapshot.getValue(Cities.class);
-                ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(CreateEventActivity.this,
-                        android.R.layout.simple_spinner_item, getCities());
-                dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                dataAdapter.notifyDataSetChanged();
-                citySpinner.setAdapter(dataAdapter);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-        }
-        else {
-            ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(CreateEventActivity.this,
-                    android.R.layout.simple_spinner_item, getCities());
-            dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            dataAdapter.notifyDataSetChanged();
-            citySpinner.setAdapter(dataAdapter);
         }
         //endregion
 
@@ -340,7 +311,7 @@ public class CreateEventActivity extends AppCompatActivity {
                 GeoPoint gp;
                 try {
                     if(event.lon==0) {
-                        gp = getLocationFromAddress(address.getText().toString() + ", " + getCities().get(citySpinner.getSelectedIndex()));
+                        gp = getLocationFromAddress(address.getText().toString() + ", " + citySpinner.getText().toString());
                         event.lon = gp.getLongitude();
                         event.lat = gp.getLatitude();
                     }
@@ -351,7 +322,7 @@ public class CreateEventActivity extends AppCompatActivity {
 
                 event.title=title.getText().toString();
                 event.dateTime=date.getText().toString()+" "+time.getText().toString();
-                event.address=address.getText().toString()+", "+getCities().get(citySpinner.getSelectedIndex());
+                event.address=address.getText().toString()+", "+citySpinner.getText().toString();
                 event.maxOccupancy=Integer.parseInt(maxOccupancy.getText().toString());
                 event.description=description.getText().toString();
                 event.specialRequirement=specialReq.getText().toString();
@@ -433,12 +404,7 @@ public class CreateEventActivity extends AppCompatActivity {
         addresses = geocoder.getFromLocation(lat, lon, 1);
 
         address.setText(addresses.get(0).getAddressLine(0).substring(0,addresses.get(0).getAddressLine(0).indexOf(",")));
-        int br=0;
-        for (String s:getCities()) {
-            if(s.equals(addresses.get(0).getLocality()))
-                citySpinner.setSelectedIndex(br);
-            br++;
-        }
+        citySpinner.setText(addresses.get(0).getLocality());
 
     }
 

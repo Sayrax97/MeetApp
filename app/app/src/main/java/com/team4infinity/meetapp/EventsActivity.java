@@ -232,9 +232,25 @@ public class EventsActivity extends AppCompatActivity {
                 break;
             }
             case 12:{
-                //TODO
-                Toast.makeText(that, "Distance clicked", Toast.LENGTH_SHORT).show();
-                Collections.sort(events,Comparator.comparing(Event::getAddress));
+                if(sortOrder.compareTo(getResources().getString(R.string.asc))==0){
+                    Location locationA = new Location("point A");
+
+                    locationA.setLatitude(Singleton.getInstance().user.locLat);
+                    locationA.setLongitude(Singleton.getInstance().user.locLon);
+                    Collections.sort(events,Comparator.comparing(event -> {
+
+                        Location locationB = new Location("point B");
+
+                        locationB.setLatitude(event.lat);
+                        locationB.setLongitude(event.lon);
+
+                        return locationA.distanceTo(locationB);
+                    }));
+                }
+                else {
+                    Collections.sort(events,Comparator.comparing(Event::getTitle).reversed());
+                }
+                Singleton.getInstance().resetEventKeyIndexer();
                 break;
             }
             case 13:{

@@ -124,13 +124,10 @@
                     android:inputType="textPersonName"
                     android:text="" />
 
-                <com.jaredrummler.materialspinner.MaterialSpinner
+                <EditText
                     android:id="@+id/CityCE"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:ms_dropdown_max_height="200dp"
-                    app:ms_arrow_tint="@color/colorPrimary"
-                    app:ms_text_color="@color/colorPrimaryDark"
+                    android:layout_height="match_parent"
                     android:layout_weight="1" />
 
 

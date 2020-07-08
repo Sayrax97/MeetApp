@@ -156,7 +156,10 @@ public class ProfileActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
             case -1:{
+                if(!Singleton.getInstance().getUser().friends.contains(user.uID))
                 database.child(FIREBASE_CHILD_USER).child(user.uID).child("pendingRequests").child("" + (Singleton.getInstance().getUser().pendingRequests.size())).setValue(Singleton.getInstance().getUser().uID);
+                else
+                    Toast.makeText(that, "You are friends already", Toast.LENGTH_SHORT).show();
                 break;
             }
             case R.id.go_to_profile:{

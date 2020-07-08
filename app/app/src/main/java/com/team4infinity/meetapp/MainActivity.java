@@ -505,8 +505,24 @@ public class MainActivity extends Activity {
                         popupTextView2.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
                         Event e=getEvents().get(index);
                         popUpTextView3.setText(e.getAttendeesID().size()+"/"+e.getMaxOccupancy());
+                        if(!Singleton.getInstance().getUser().bookmarkedEventsID.contains(e.key)){
+                            popupBookmarkImageView.setImageResource(R.drawable.bookmark);
+                        }
+                        else{
+                            popupBookmarkImageView.setImageResource(R.drawable.bookmarkx);
+                        }
                         popupBookmarkImageView.setOnClickListener(v -> {
-                            Toast.makeText(that, "Bookmark clicked", Toast.LENGTH_SHORT).show();
+                            if(!Singleton.getInstance().getUser().bookmarkedEventsID.contains(e.key)){
+                                Singleton.getInstance().getUser().bookmarkedEventsID.add(e.key);
+                                database.child("users").child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").child("" + (Singleton.getInstance().getUser().bookmarkedEventsID.size() - 1)).setValue(e.key);
+                                popupBookmarkImageView.setImageResource(R.drawable.bookmarkx);
+                            }
+                            else{
+                                Singleton.getInstance().getUser().bookmarkedEventsID.remove(e.key);
+                                database.child("users").child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").setValue(Singleton.getInstance().getUser().bookmarkedEventsID);
+                                popupBookmarkImageView.setImageResource(R.drawable.bookmark);
+                            }
+                            Toast.makeText(that, "nesto", Toast.LENGTH_SHORT).show();
                         });
                         popUpCardView.setVisibility(View.VISIBLE);
 
@@ -577,6 +593,25 @@ public class MainActivity extends Activity {
 
                             try {
                                 address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
+                                if(!Singleton.getInstance().getUser().bookmarkedEventsID.contains(e.key)){
+                                    popupBookmarkImageView.setImageResource(R.drawable.bookmark);
+                                }
+                                else{
+                                    popupBookmarkImageView.setImageResource(R.drawable.bookmarkx);
+                                }
+                                popupBookmarkImageView.setOnClickListener(v -> {
+                                    if(!Singleton.getInstance().getUser().bookmarkedEventsID.contains(e.key)){
+                                        Singleton.getInstance().getUser().bookmarkedEventsID.add(e.key);
+                                        database.child("users").child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").child("" + (Singleton.getInstance().getUser().bookmarkedEventsID.size() - 1)).setValue(e.key);
+                                        popupBookmarkImageView.setImageResource(R.drawable.bookmarkx);
+                                    }
+                                    else{
+                                        Singleton.getInstance().getUser().bookmarkedEventsID.remove(e.key);
+                                        database.child("users").child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").setValue(Singleton.getInstance().getUser().bookmarkedEventsID);
+                                        popupBookmarkImageView.setImageResource(R.drawable.bookmark);
+                                    }
+                                    Toast.makeText(that, "nesto", Toast.LENGTH_SHORT).show();
+                                });
                                 popupTextView1.setText(item.getTitle());
                                 popupTextView2.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
                                 popUpCardView.setVisibility(View.VISIBLE);
@@ -679,6 +714,25 @@ public class MainActivity extends Activity {
 
                 try {
                     address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
+                    if(!Singleton.getInstance().getUser().bookmarkedEventsID.contains(item.getSnippet())){
+                        popupBookmarkImageView.setImageResource(R.drawable.bookmark);
+                    }
+                    else{
+                        popupBookmarkImageView.setImageResource(R.drawable.bookmarkx);
+                    }
+                    popupBookmarkImageView.setOnClickListener(v -> {
+                        if(!Singleton.getInstance().getUser().bookmarkedEventsID.contains(item.getSnippet())){
+                            Singleton.getInstance().getUser().bookmarkedEventsID.add(item.getSnippet());
+                            database.child("users").child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").child("" + (Singleton.getInstance().getUser().bookmarkedEventsID.size() - 1)).setValue(item.getSnippet());
+                            popupBookmarkImageView.setImageResource(R.drawable.bookmarkx);
+                        }
+                        else{
+                            Singleton.getInstance().getUser().bookmarkedEventsID.remove(item.getSnippet());
+                            database.child("users").child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").setValue(Singleton.getInstance().getUser().bookmarkedEventsID);
+                            popupBookmarkImageView.setImageResource(R.drawable.bookmark);
+                        }
+                        Toast.makeText(that, "nesto", Toast.LENGTH_SHORT).show();
+                    });
                     popupTextView1.setText(item.getTitle());
                     popupTextView2.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
                     popUpCardView.setVisibility(View.VISIBLE);
