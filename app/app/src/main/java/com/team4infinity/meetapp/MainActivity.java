@@ -180,14 +180,6 @@ public class MainActivity extends Activity {
         chipGroup.addView(chip);
         //endregion
 
-        //region ServiceStart
-        Intent intentService=new Intent(that, MyService.class);
-        if(!isMyServiceRunning(MyService.class)){
-            startService(intentService);
-            Toast.makeText(that, "Service started in background", Toast.LENGTH_SHORT).show();
-        }
-        //endregion
-
         //region BottomNavBar
         bottomNav.setOnNavigationItemSelectedListener(item -> {
             switch (item.getItemId()){
@@ -292,16 +284,23 @@ public class MainActivity extends Activity {
         });
         map.setMultiTouchControls(true);
         //region Permissions
-        if(ActivityCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE)!=PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},PERMISSION_WRITE_EXTERNAL_STORAGE);
-        }
+//        if(ActivityCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE)!=PackageManager.PERMISSION_GRANTED){
+//            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},PERMISSION_WRITE_EXTERNAL_STORAGE);
+//        }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
         {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_ACCESS_FINE_LOCATION);
         }
         else {
-        setMyLocationOverlay();
+            setMyLocationOverlay();
+            //region ServiceStart
+            Intent intentService=new Intent(that, MyService.class);
+            if(!isMyServiceRunning(MyService.class)){
+                startService(intentService);
+                Toast.makeText(that, "Service started in background", Toast.LENGTH_SHORT).show();
+            }
+            //endregion
         }
         //endregion
         mapController=map.getController();
@@ -363,14 +362,27 @@ public class MainActivity extends Activity {
         else
             showEvents();
         setUpMapClick();
-        showMyLocation();
-        map.onResume();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
+            //ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_ACCESS_FINE_LOCATION);
+        }
+        else {
+            showMyLocation();
+            map.onResume();
+        }
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        map.onPause();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
+            //ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_ACCESS_FINE_LOCATION);
+        }
+        else {
+            map.onPause();
+        }
     }
     //endregion
 
@@ -382,19 +394,26 @@ public class MainActivity extends Activity {
             case PERMISSION_ACCESS_FINE_LOCATION: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     setMyLocationOverlay();
+                    //region ServiceStart
+                    Intent intentService=new Intent(that, MyService.class);
+                    if(!isMyServiceRunning(MyService.class)){
+                        startService(intentService);
+                        Toast.makeText(that, "Service started in background", Toast.LENGTH_SHORT).show();
+                    }
+                    //endregion
                 }
                 else {
                     finish();
                 }
                 return;
             }
-            case PERMISSION_WRITE_EXTERNAL_STORAGE:{
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                }else {
-                    finish();
-                }
-            }
+//            case PERMISSION_WRITE_EXTERNAL_STORAGE:{
+//                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//
+//                }else {
+//                    finish();
+//                }
+//            }
         }
     }
 
