@@ -55,7 +55,7 @@ public class PendingRequestDialog extends AppCompatDialogFragment {
         PendingRequestsAdapter adapter=new PendingRequestsAdapter(getActivity(),users);
         for (String s:Singleton.getInstance().getUser().pendingRequests) {
 
-            database.child(FIREBASE_CHILD_USER).child(s).addValueEventListener(new ValueEventListener() {
+            database.child(FIREBASE_CHILD_USER).child(s).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     User user = dataSnapshot.getValue(User.class);
