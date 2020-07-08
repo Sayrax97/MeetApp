@@ -205,9 +205,9 @@ public class MainActivity extends Activity {
                 }
                 case R.id.nb_options:{
                     MaterialAlertDialogBuilder dialogBuilder=new MaterialAlertDialogBuilder(that);
-                    dialogBuilder.setTitle(R.string.options).setItems(isMyServiceRunning(MyService.class)?new CharSequence[]{menuIconWithText(getResources().getDrawable(R.drawable.ranking,null),"Leaderboard"),
+                    dialogBuilder.setTitle(R.string.options).setItems(isMyServiceRunning(MyService.class)?new CharSequence[]{menuIconWithText(getResources().getDrawable(R.drawable.ranking,null),"Leaderboard"),menuIconWithText(getResources().getDrawable(R.drawable.friends,null),"Friends list"),
                                     menuIconWithText(getResources().getDrawable(R.drawable.ic_baseline_rss_feed_24,null),"Turn off service"), menuIconWithText(getResources().getDrawable(R.drawable.logout,null),"Logout")}:
-                                    new CharSequence[]{menuIconWithText(getResources().getDrawable(R.drawable.ranking,null),"Leaderboard"), menuIconWithText(getResources().getDrawable(R.drawable.ic_baseline_rss_feed_24,null),"Turn on service"),
+                                    new CharSequence[]{menuIconWithText(getResources().getDrawable(R.drawable.ranking,null),"Leaderboard"),menuIconWithText(getResources().getDrawable(R.drawable.friends,null),"Friends list"), menuIconWithText(getResources().getDrawable(R.drawable.ic_baseline_rss_feed_24,null),"Turn on service"),
                                             menuIconWithText(getResources().getDrawable(R.drawable.logout,null),"Logout")},
                             (dialog, which) -> {
                         switch (which){
@@ -216,6 +216,10 @@ public class MainActivity extends Activity {
                                 break;
                             }
                             case 1:{
+                                startActivity(new Intent(that,FriendsActivity.class));
+                                break;
+                            }
+                            case 2:{
                                 Intent intent=new Intent(that, MyService.class);
                                 if(isMyServiceRunning(MyService.class)){
                                     stopService(intent);
@@ -225,7 +229,7 @@ public class MainActivity extends Activity {
                                 }
                                 break;
                             }
-                            case 2:{
+                            case 3:{
                                 auth.signOut();
                                 Intent intent=new Intent(this,LoginActivity.class);
                                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
