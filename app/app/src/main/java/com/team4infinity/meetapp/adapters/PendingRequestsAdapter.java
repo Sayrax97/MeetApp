@@ -63,8 +63,8 @@ public class PendingRequestsAdapter extends RecyclerView.Adapter<PendingRequests
             ctx.startActivity(intent);
         });
         holder.acceptImageView.setOnClickListener(v -> {
-            Singleton.getInstance().getUser().friends.add(users.get(position).uID);
-            database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("friends").child("" + (Singleton.getInstance().getUser().friends.size() - 1)).setValue(users.get(position).uID);
+            //Singleton.getInstance().getUser().friends.add(users.get(position).uID);
+            database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("friends").child("" + (Singleton.getInstance().getUser().friends.size())).setValue(users.get(position).uID);
             database.child(FIREBASE_CHILD_USER).child(users.get(position).uID).child("friends").child("" + (users.get(position).friends.size())).setValue(Singleton.getInstance().getUser().uID);
             Singleton.getInstance().getUser().pendingRequests.remove(users.get(position).uID);
             database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("pendingRequests").setValue(Singleton.getInstance().getUser().pendingRequests);
