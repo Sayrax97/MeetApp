@@ -33,7 +33,7 @@ app.post("/friend/request", (req, res) => {
     admin
       .database()
       .ref(`users/${body.receiver_key}`)
-      .on("value", snapshot => {
+      .once("value", snapshot => {
         let user = snapshot.toJSON();
         request.post(
           "https://fcm.googleapis.com/v1/projects/meetapp-33e04/messages:send",
@@ -71,7 +71,7 @@ app.post("/new_event", (req, res) => {
     admin
       .database()
       .ref("users")
-      .on("value", snapshot => {
+      .once("value", snapshot => {
         snapshot.forEach(userSnap => {
           let user = userSnap.toJSON();
           if (user.token || body.creator_id != userSnap.key)
