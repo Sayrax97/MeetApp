@@ -19,6 +19,7 @@ public class User implements Serializable {
     public double locLat;
     public double locLon;
     public double points;
+    public String token;
     public ArrayList<String> pendingRequests=new ArrayList<>();
     public ArrayList<String> bookmarkedEventsID=new ArrayList<>();
     public ArrayList<String> ratedEventsID=new ArrayList<>();

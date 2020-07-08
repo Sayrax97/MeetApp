@@ -107,5 +107,6 @@
     <string name="go_to_profile">Go to profile</string>
     <string name="pending_request">Pending requests</string>
     <string name="am_out">I\'m out</string>
+    <string name="leaderboard">Leaderboard</string>
 
 </resources>

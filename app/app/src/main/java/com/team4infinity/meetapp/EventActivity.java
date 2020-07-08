@@ -15,6 +15,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -302,7 +303,9 @@ public class EventActivity extends AppCompatActivity {
             intent.putExtra("creator",event.getCreatorID());
             startActivity(intent);
         });
+
         loadAtendees();
+
         attendeesViewAllTextView.setOnClickListener(v -> {
             ArrayList<String> attendeeNames=new ArrayList<>();
             for (User u:attendees) {
@@ -354,10 +357,10 @@ public class EventActivity extends AppCompatActivity {
                         ImageView imageView = new ImageView(this);
 
                         //setting image resource
-                        Picasso.with(that).load(uri).resize(500,500).centerInside().into(imageView);
+                        Picasso.with(that).load(uri).resize(200,200).centerCrop().into(imageView);
 
                         //setting image position
-                        imageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                        imageView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                                 LinearLayout.LayoutParams.MATCH_PARENT));
                         galleryHorizontalScrollView.addView(imageView);
                     }
@@ -428,7 +431,7 @@ public class EventActivity extends AppCompatActivity {
             storage.child(FIREBASE_CHILD_USER).child(uid).child("profile").getDownloadUrl().addOnSuccessListener(uri -> {
                 attendeesImagesUris.add(uri);
                 CircleImageView imageView = new CircleImageView(this);
-                Picasso.with(that).load(uri).resize(500,500).centerInside().into(imageView);
+                Picasso.with(that).load(uri).resize(200,200).centerCrop().into(imageView);
                 imageView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.MATCH_PARENT));
                 attendeesHorizontalScrollView.addView(imageView);

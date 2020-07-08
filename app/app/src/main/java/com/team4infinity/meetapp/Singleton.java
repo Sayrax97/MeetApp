@@ -7,9 +7,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.team4infinity.meetapp.models.CategoryList;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -111,6 +115,7 @@ public class Singleton {
 
             }
         });
+        FirebaseMessaging.getInstance().subscribeToTopic("new.event").addOnSuccessListener(aVoid -> Log.d(TAG, "onSuccess: subscribed to new event topic"));
 
 //        Date date=new Date();
 //        SimpleDateFormat simpleDateFormat=new SimpleDateFormat("yyyy/MM/dd");
@@ -169,6 +174,20 @@ public class Singleton {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 user=dataSnapshot.getValue(User.class);
                 user.uID=currentUser.getUid();
+                FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(new OnSuccessListener<InstanceIdResult>() {
+                    @Override
+                    public void onSuccess(InstanceIdResult instanceIdResult) {
+                        if(user.token==null){
+                            database.child(FIREBASE_CHILD_USER).child(currentUser.getUid()).child("token").setValue(instanceIdResult.getToken());
+                        }
+                        else if(instanceIdResult.getToken().compareTo(user.token)==0){
+                        }
+                        else {
+                            user.token=instanceIdResult.getToken();
+                            database.child(FIREBASE_CHILD_USER).child(currentUser.getUid()).child("token").setValue(instanceIdResult.getToken());
+                        }
+                    }
+                });
             }
 
     
