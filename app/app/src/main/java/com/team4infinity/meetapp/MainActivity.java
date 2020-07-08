@@ -172,8 +172,9 @@ public class MainActivity extends Activity {
                 showFriends();
             if (isChecked)
             {
-                Toast.makeText(that, "My events selected", Toast.LENGTH_SHORT).show();
                 filterMyEvents();
+                setUpMapClick();
+                map.getOverlays().add(myLocationNewOverlay);
             }
         });
         chip.setChipIcon(getResources().getDrawable(R.drawable.user,null));
@@ -443,10 +444,15 @@ public class MainActivity extends Activity {
                             chip.setText(category);
                             chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
                                 if(isFreindsOn)
-                                    showFriends();
+                                    {
+                                        showFriends();
+                                        map.getOverlays().add(myLocationNewOverlay);
+                                    }
                                 if (isChecked)
                                 {
                                     filterEvents(category);
+                                    setUpMapClick();
+                                    map.getOverlays().add(myLocationNewOverlay);
                                 }
                             });
                             storage.child(FIREBASE_CHILD_CAT).child(category.toLowerCase()+".png").getBytes(ONE_MEGA_BYTE).addOnCompleteListener(task -> {
@@ -459,6 +465,8 @@ public class MainActivity extends Activity {
                         chipGroup.setOnCheckedChangeListener((group, checkedId) -> {
                             if(checkedId==-1){
                                 showEvents();
+                                setUpMapClick();
+                                map.getOverlays().add(myLocationNewOverlay);
                             }
                         });
                     }
@@ -474,9 +482,16 @@ public class MainActivity extends Activity {
                 final Chip chip = (Chip) MainActivity.this.getLayoutInflater().inflate(R.layout.item_chip_layout, null, false);
                 chip.setText(s);
                 chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    if(isFreindsOn)
+                        {
+                            showFriends();
+                            map.getOverlays().add(myLocationNewOverlay);
+                        }
                     if (isChecked)
                     {
                         filterEvents(s);
+                        setUpMapClick();
+                        map.getOverlays().add(myLocationNewOverlay);
                     }
                 });
                 storage.child(FIREBASE_CHILD_CAT).child(s.toLowerCase()+".png").getBytes(ONE_MEGA_BYTE).addOnCompleteListener(task -> {
@@ -489,6 +504,8 @@ public class MainActivity extends Activity {
             chipGroup.setOnCheckedChangeListener((group, checkedId) -> {
                 if(checkedId==-1){
                     showEvents();
+                    setUpMapClick();
+                    map.getOverlays().add(myLocationNewOverlay);
                 }
             });
         }
@@ -1051,9 +1068,10 @@ public class MainActivity extends Activity {
                 drawable.setTint(getColor(R.color.colorPrimary));
                 fabFriends.setImageDrawable(drawable);
                 showEvents();
+                setUpMapClick();
+                map.getOverlays().add(myLocationNewOverlay);
                 return;
             }
-            final ArrayList<OverlayItem> items = new ArrayList<>();
             removeOverlays();
             ArrayList<String> friends=Singleton.getInstance().getUser().friends;
             Drawable drawable=getResources().getDrawable(R.drawable.close,null);
@@ -1067,6 +1085,7 @@ public class MainActivity extends Activity {
             if (!friends.isEmpty())
             {
                 for (String uid:friends) {
+                    ArrayList<OverlayItem> items = new ArrayList<>();
                     if(friendsUsers.containsKey(uid)){
                         User user=friendsUsers.get(uid);
                         if(user.locLat==0 || user.locLon==0)
@@ -1078,10 +1097,9 @@ public class MainActivity extends Activity {
                         Overlay overlay= new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
                             @Override
                             public boolean onItemSingleTapUp(int index, OverlayItem item) {
-                                Toast.makeText(MainActivity.this, "" + item.getTitle(), Toast.LENGTH_SHORT).show();
                                 Intent intent=new Intent(that, ProfileActivity.class);
                                 intent.putExtra("type","other");
-                                intent.putExtra("key",uid);
+                                intent.putExtra("key",item.getSnippet());
                                 startActivity(intent);
                                 return false;
                             }
@@ -1122,10 +1140,9 @@ public class MainActivity extends Activity {
                             Overlay overlay= new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
                                 @Override
                                 public boolean onItemSingleTapUp(int index, OverlayItem item) {
-                                    Toast.makeText(MainActivity.this, "" + item.getTitle(), Toast.LENGTH_SHORT).show();
                                     Intent intent=new Intent(that, ProfileActivity.class);
                                     intent.putExtra("type","other");
-                                    intent.putExtra("key",uid);
+                                    intent.putExtra("key",item.getSnippet());
                                     startActivity(intent);
                                     return false;
                                 }
@@ -1153,10 +1170,8 @@ public class MainActivity extends Activity {
 
                         }
                     }));
-                    items.clear();
                 }
             }
-
     }
 
     private void showFriendsOnZoom(){

@@ -218,7 +218,7 @@ public class EventActivity extends AppCompatActivity {
 
                                 }
                             });
-                            database.child(FIREBASE_CHILD_USER).child(auth.getCurrentUser().getUid()).child("points").addListenerForSingleValueEvent(new ValueEventListener() {
+                            database.child(FIREBASE_CHILD_USER).child(event.getCreatorID()).child("points").addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                     double points=dataSnapshot.getValue(Double.class);
