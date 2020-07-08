@@ -56,9 +56,9 @@ public class MyMessageingService extends FirebaseMessagingService {
 
     private static void displayNotification(Context context, String title, String body, Map data) {
         PendingIntent pendingIntent = null;
-        if(data.containsKey("key")) {
+        if(data.containsKey("event")) {
             Intent intent=new Intent(context, EventActivity.class);
-            intent.putExtra("key",data.get("key").toString());
+            intent.putExtra("key",data.get("event").toString());
             pendingIntent=PendingIntent.getActivity(context,100,intent,PendingIntent.FLAG_CANCEL_CURRENT);
         }
         else if(data.containsKey("friend")){

@@ -115,13 +115,6 @@ public class Singleton {
 
             }
         });
-        FirebaseMessaging.getInstance().subscribeToTopic("new.event").addOnSuccessListener(aVoid -> Log.d(TAG, "onSuccess: subscribed to new event topic"));
-
-//        Date date=new Date();
-//        SimpleDateFormat simpleDateFormat=new SimpleDateFormat("yyyy/MM/dd");
-//        String dateString=simpleDateFormat.format(date);
-//        database.child(FIREBASE_CHILD_EBD).
-
     }
 
 
