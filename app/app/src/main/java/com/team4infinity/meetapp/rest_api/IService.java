@@ -1,5 +1,6 @@
 package com.team4infinity.meetapp.rest_api;
 
+import com.team4infinity.meetapp.models.AddFriend;
 import com.team4infinity.meetapp.models.NewEvent;
 
 import java.util.List;
@@ -18,4 +19,12 @@ public interface IService {
     })
     @POST("new_event")
     Call<String> newEvent(@Body NewEvent event);
+
+    @Headers({
+
+            "Content-type: application/json"
+
+    })
+    @POST("friend/request")
+    Call<String> addFriend(@Body AddFriend addFriend);
 }

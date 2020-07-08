@@ -21,6 +21,8 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.team4infinity.meetapp.models.Event;
 
+import java.util.Map;
+
 import static androidx.core.app.NotificationCompat.PRIORITY_DEFAULT;
 
 public class MyMessageingService extends FirebaseMessagingService {
@@ -42,7 +44,7 @@ public class MyMessageingService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-        displayNotification(getApplicationContext(),remoteMessage.getNotification().getTitle(),remoteMessage.getNotification().getBody(),remoteMessage.getData().get("event"));
+        displayNotification(getApplicationContext(),remoteMessage.getNotification().getTitle(),remoteMessage.getNotification().getBody(),remoteMessage.getData());
     }
 
     @Override
@@ -52,10 +54,18 @@ public class MyMessageingService extends FirebaseMessagingService {
 
     }
 
-    private static void displayNotification(Context context,String title,String body,String key) {
-        Intent intent=new Intent(context, EventActivity.class);
-        intent.putExtra("key",key);
-        PendingIntent pendingIntent=PendingIntent.getActivity(context,100,intent,PendingIntent.FLAG_CANCEL_CURRENT);
+    private static void displayNotification(Context context, String title, String body, Map data) {
+        PendingIntent pendingIntent = null;
+        if(data.containsKey("key")) {
+            Intent intent=new Intent(context, EventActivity.class);
+            intent.putExtra("key",data.get("key").toString());
+            pendingIntent=PendingIntent.getActivity(context,100,intent,PendingIntent.FLAG_CANCEL_CURRENT);
+        }
+        else if(data.containsKey("friend")){
+            Intent intent=new Intent(context, ProfileActivity.class);
+            intent.putExtra("type","loggedIn");
+            pendingIntent=PendingIntent.getActivity(context,100,intent,PendingIntent.FLAG_CANCEL_CURRENT);
+        }
         NotificationCompat.Builder builder=new NotificationCompat.Builder(context,CHANNEL_ID)
                 .setContentTitle(title)
                 .setContentText(body)

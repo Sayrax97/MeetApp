@@ -40,8 +40,11 @@ import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 import com.team4infinity.meetapp.adapters.LeaderboardsAdapter;
 import com.team4infinity.meetapp.adapters.PendingRequestsAdapter;
+import com.team4infinity.meetapp.models.AddFriend;
 import com.team4infinity.meetapp.models.EmailSearchModel;
+import com.team4infinity.meetapp.models.NewEvent;
 import com.team4infinity.meetapp.models.User;
+import com.team4infinity.meetapp.rest_api.IService;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -52,6 +55,11 @@ import java.util.HashMap;
 import de.hdodenhof.circleimageview.CircleImageView;
 import ir.mirrajabi.searchdialog.SimpleSearchDialogCompat;
 import ir.mirrajabi.searchdialog.core.Searchable;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import static com.team4infinity.meetapp.CreateAccountActivity.SELECT_PICTURE;
 
@@ -60,6 +68,7 @@ public class ProfileActivity extends AppCompatActivity {
     public static final long ONE_MEGABYTE=1024*1024;
     private static final String FIREBASE_CHILD_USER ="users";
     private static final Integer SELECT_PICTURE =3;
+    private static final String TAG = "ProfileActivity";
     //region Members
     CircleImageView profileImage;
     TextView fullName,email,gender,date,createdEvents,ratedEvents,attendedEvents,pointsTextView;
@@ -158,6 +167,7 @@ public class ProfileActivity extends AppCompatActivity {
         switch (item.getItemId()){
             case -1:{
                 database.child(FIREBASE_CHILD_USER).child(user.uID).child("pendingRequests").child("" + (Singleton.getInstance().getUser().pendingRequests.size())).setValue(Singleton.getInstance().getUser().uID);
+                sendNotification(new AddFriend(Singleton.getInstance().getUser().firstName+" "+Singleton.getInstance().getUser().lastName,user.uID));
                 break;
             }
             case R.id.go_to_profile:{
@@ -266,5 +276,28 @@ public class ProfileActivity extends AppCompatActivity {
         i.setType("image/*");
         i.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(i,"Select profile picture"),SELECT_PICTURE);
+    }
+    private void sendNotification(AddFriend addFriend){
+        Retrofit retrofit=new Retrofit.Builder()
+                .baseUrl("https://us-central1-meetapp-33e04.cloudfunctions.net/api/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        IService iService =retrofit.create(IService.class);
+
+        Call<String> call=iService.addFriend(addFriend);
+
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                Log.d(TAG, "onResponse: Works");
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Log.d(TAG, "onFailure: Dead");
+            }
+        });
+
     }
 }
