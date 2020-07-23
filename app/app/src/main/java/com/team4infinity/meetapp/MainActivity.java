@@ -169,7 +169,7 @@ public class MainActivity extends Activity {
         chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
 
             if (isFreindsOn)
-                showFriends();
+                showFriendsNew();
             if (isChecked)
             {
                 filterMyEvents();
@@ -325,7 +325,7 @@ public class MainActivity extends Activity {
             setMyLocationOverlay();
         });
         fabFriends=findViewById(R.id.fab_friends);
-        fabFriends.setOnClickListener(v ->showFriends());
+        fabFriends.setOnClickListener(v ->showFriendsNew());
         //endregion
 
 
@@ -449,7 +449,7 @@ public class MainActivity extends Activity {
                             chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
                                 if(isFreindsOn)
                                     {
-                                        showFriends();
+                                        showFriendsNew();
                                         map.getOverlays().add(myLocationNewOverlay);
                                     }
                                 if (isChecked)
@@ -488,7 +488,7 @@ public class MainActivity extends Activity {
                 chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
                     if(isFreindsOn)
                         {
-                            showFriends();
+                            showFriendsNew();
                             map.getOverlays().add(myLocationNewOverlay);
                         }
                     if (isChecked)
@@ -1222,6 +1222,116 @@ public class MainActivity extends Activity {
                 }
             }
         }
+    }
+
+    private void showFriendsNew() {
+
+        if(isFreindsOn){
+            isFreindsOn= false;
+            Drawable drawable=getResources().getDrawable(R.drawable.friends,null);
+            drawable.setTint(getColor(R.color.colorPrimary));
+            fabFriends.setImageDrawable(drawable);
+            showEvents();
+            setUpMapClick();
+            map.getOverlays().add(myLocationNewOverlay);
+            return;
+        }
+        removeOverlays();
+        ArrayList<String> friends=Singleton.getInstance().getUser().friends;
+        Drawable drawable=getResources().getDrawable(R.drawable.close,null);
+        drawable.setTint(getColor(R.color.colorPrimary));
+        fabFriends.setImageDrawable(drawable);
+        isFreindsOn=true;
+        if (friendsBM==null)
+            friendsBM=new HashMap<>();
+        if (friendsUsers==null)
+            friendsUsers=new HashMap<>();
+        if (!friends.isEmpty())
+        {
+            for (String uid:friends) {
+                ArrayList<OverlayItem> items = new ArrayList<>();
+                if(friendsBM.containsKey(uid)){
+                    database.child(FIREBASE_CHILD_USER).child(uid).addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            User user=snapshot.getValue(User.class);
+                            user.uID=uid;
+                            friendsUsers.put(uid,user);
+                            if(user.locLat==0 || user.locLon==0)
+                                return;
+                            reloadFriends();
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+                }
+                else
+                    storage.child(FIREBASE_CHILD_USER).child(uid).child("profile").getBytes(5*ONE_MEGA_BYTE).addOnSuccessListener(bytes ->
+                            database.child(FIREBASE_CHILD_USER).child(uid).addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                    User user=dataSnapshot.getValue(User.class);
+                                    user.uID=uid;
+                                    if(user.locLat==0 || user.locLon==0)
+                                        return;
+                                    Bitmap bitmap=BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                                    Bitmap bitmap1= Bitmap.createScaledBitmap(bitmap,100,100,false);
+                                    friendsBM.put(uid,bitmap1);
+                                    friendsUsers.put(uid,user);
+                                    reloadFriends();
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                }
+                            }));
+            }
+        }
+    }
+
+    private void reloadFriends(){
+        removeOverlays();
+        ArrayList<OverlayItem> items=new ArrayList<>();
+        ArrayList<String> friends=Singleton.getInstance().getUser().friends;
+        for (String uid:friends) {
+            if(friendsUsers.containsKey(uid)) {
+            User user=friendsUsers.get(uid);
+            OverlayItem item = new OverlayItem(user.firstName + " " + user.lastName, user.uID, new GeoPoint(user.locLat, user.locLon));
+            Bitmap bitmap1 = friendsBM.get(user.uID);
+            item.setMarker(new BitmapDrawable(getResources(), bitmap1));
+            items.add(item);
+            Overlay overlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+                @Override
+                public boolean onItemSingleTapUp(int index, OverlayItem item) {
+                    Intent intent = new Intent(that, ProfileActivity.class);
+                    intent.putExtra("type", "other");
+                    intent.putExtra("key", item.getSnippet());
+                    startActivity(intent);
+                    return false;
+                }
+
+                @Override
+                public boolean onItemLongPress(int index, OverlayItem item) {
+                    return false;
+                }
+            }, that);
+            map.getOverlays().add(overlay);
+            Marker m = new Marker(map);
+            m.setOnMarkerClickListener((marker, mapView) -> {
+                m.closeInfoWindow();
+                return false;
+            });
+            m.setTextLabelBackgroundColor(Color.TRANSPARENT);
+            m.setTextIcon(user.firstName + " " + user.lastName);
+            m.setPosition(new GeoPoint(user.locLat, user.locLon));
+            map.getOverlays().add(m);
+            }
+        }
+        map.invalidate();
     }
     //endregion
 }
