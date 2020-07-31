@@ -155,4 +155,25 @@ public class Event {
     public void setCategory(String category) {
         this.category = category;
     }
+
+    @Override
+    public String toString() {
+        return "Event{" +
+                "title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", address='" + address + '\'' +
+                ", dateTime='" + dateTime + '\'' +
+                ", specialRequirement='" + specialRequirement + '\'' +
+                ", lat=" + lat +
+                ", lon=" + lon +
+                ", rating=" + rating +
+                ", price=" + price +
+                ", key='" + key + '\'' +
+                ", maxOccupancy=" + maxOccupancy +
+                ", creatorID='" + creatorID + '\'' +
+                ", attendeesID=" + attendeesID +
+                ", ratedByID=" + ratedByID +
+                ", category='" + category + '\'' +
+                '}';
+    }
 }

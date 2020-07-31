@@ -106,6 +106,9 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -121,6 +124,8 @@ public class MainActivity extends Activity {
     public static final long ONE_MEGA_BYTE=1024*1024;
     private static final String TAG ="MainActivity";
     private static final String FIREBASE_CHILD_USER ="users" ;
+    private static final String FIREBASE_CHILD_EBD ="events_by_date";
+    private static final String FIREBASE_CHILD_EVENT ="events" ;
     private FirebaseAuth auth;
     private Context that=this;
     private MapView map=null;
@@ -626,115 +631,199 @@ public class MainActivity extends Activity {
         removeOverlays();
         if (getEvents().isEmpty())
         {
-            database.child("events").addChildEventListener(new ChildEventListener() {
+//            database.child(FIREBASE_CHILD_EVENT).addChildEventListener(new ChildEventListener() {
+//                @Override
+//                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//                    Event e=dataSnapshot.getValue(Event.class);
+//                    if (!Singleton.getInstance().getEventKeyIndexer().containsKey(e.key))
+//                        {Singleton.getInstance().events.add(e);
+//                        Singleton.getInstance().getEventKeyIndexer().put(e.getKey(),Singleton.getInstance().events.size()-1);}
+//                    OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
+//                    item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
+//                    items.add(item);
+//                    Marker m= new Marker(map);
+//                    m.setOnMarkerClickListener((marker, mapView) -> {
+//                        m.closeInfoWindow();
+//                        return false;
+//                    });
+//                    m.setTextLabelBackgroundColor(Color.TRANSPARENT);
+//                    m.setTextIcon(e.getTitle());
+//                    m.setPosition(new GeoPoint(e.lat,e.lon));
+//                    map.getOverlays().add(m);
+//                    eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+//                        @Override
+//                        public boolean onItemSingleTapUp(int index, OverlayItem item) {
+//                            Address address;
+//                            IGeoPoint p = item.getPoint();
+//                            popUpBtn.setText("View Event");
+//                            cancelBtn.setOnClickListener(v -> {
+//                                popUpCardView.setVisibility(View.INVISIBLE);
+//                            });
+//                            popUpBtn.setOnClickListener(v -> {
+//                                popUpCardView.setVisibility(View.INVISIBLE);
+//                                Intent intent=new Intent(that,EventActivity.class);
+//                                intent.putExtra("key",e.getKey());
+//                                startActivity(intent);
+//                            });
+//
+//                            try {
+//                                address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
+//                                if(!Singleton.getInstance().getUser().bookmarkedEventsID.contains(e.key)){
+//                                    popupBookmarkImageView.setImageResource(R.drawable.bookmark);
+//                                }
+//                                else{
+//                                    popupBookmarkImageView.setImageResource(R.drawable.bookmarkx);
+//                                }
+//                                popupBookmarkImageView.setOnClickListener(v -> {
+//                                    if(!Singleton.getInstance().getUser().bookmarkedEventsID.contains(e.key)){
+//                                        Singleton.getInstance().getUser().bookmarkedEventsID.add(e.key);
+//                                        database.child("users").child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").child("" + (Singleton.getInstance().getUser().bookmarkedEventsID.size() - 1)).setValue(e.key);
+//                                        popupBookmarkImageView.setImageResource(R.drawable.bookmarkx);
+//                                    }
+//                                    else{
+//                                        Singleton.getInstance().getUser().bookmarkedEventsID.remove(e.key);
+//                                        database.child("users").child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").setValue(Singleton.getInstance().getUser().bookmarkedEventsID);
+//                                        popupBookmarkImageView.setImageResource(R.drawable.bookmark);
+//                                    }
+//                                    Toast.makeText(that, "nesto", Toast.LENGTH_SHORT).show();
+//                                });
+//                                popupTextView1.setText(item.getTitle());
+//                                popupTextView2.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
+//                                popUpCardView.setVisibility(View.VISIBLE);
+//                                Event e=getEvents().get(index);
+//                                popUpTextView3.setText(e.getAttendeesID().size()+"/"+e.getMaxOccupancy());
+//                                popUpCardView.setVisibility(View.VISIBLE);
+//
+//                            } catch (IOException e) {
+//                                e.printStackTrace();
+//                            }
+//
+//                            return false;
+//                        }
+//
+//                        @Override
+//                        public boolean onItemLongPress(int index, OverlayItem item) {
+////                Intent i = new Intent(MyPlacesMapsActivity.this, ViewMyPlaceActivity.class);
+////                i.putExtra("position", index);
+////                startActivityForResult(i, 5);
+//                            return true;
+//                        }
+//                    }, getApplicationContext());
+//                    map.getOverlays().add(eventsOverlay);
+//                    map.invalidate();
+//
+//                }
+//
+//                @Override
+//                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//                    Event event=dataSnapshot.getValue(Event.class);
+//                    int index=Singleton.getInstance().getEventKeyIndexer().get(event.key);
+//                    getEvents().set(index,event);
+//                }
+//
+//                @Override
+//                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+//                    Event event=dataSnapshot.getValue(Event.class);
+//                    int index=Singleton.getInstance().getEventKeyIndexer().get(event.key);
+//                    getEvents().remove(index);
+//                    Singleton.getInstance().resetEventKeyIndexer();
+//                }
+//
+//                @Override
+//                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//
+//                }
+//
+//                @Override
+//                public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                }
+//            });
+
+            database.child(FIREBASE_CHILD_EBD).addValueEventListener(new ValueEventListener() {
+                @RequiresApi(api = Build.VERSION_CODES.N)
                 @Override
-                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                    Event e=dataSnapshot.getValue(Event.class);
-                    if (!Singleton.getInstance().getEventKeyIndexer().containsKey(e.key))
-                        {Singleton.getInstance().events.add(e);
-                        Singleton.getInstance().getEventKeyIndexer().put(e.getKey(),Singleton.getInstance().events.size()-1);}
-                    OverlayItem item = new OverlayItem(e.title, e.description,new GeoPoint(e.lat,e.lon));
-                    item.setMarker(getResources().getDrawable(R.drawable.map_pointer_small,null));
-                    items.add(item);
-                    Marker m= new Marker(map);
-                    m.setOnMarkerClickListener((marker, mapView) -> {
-                        m.closeInfoWindow();
-                        return false;
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    Date date=new Date();
+                    Calendar calendar = new GregorianCalendar();
+                    calendar.setTime(date);
+                    int year = calendar.get(Calendar.YEAR);
+                    int month = calendar.get(Calendar.MONTH) + 1;
+                    int day = calendar.get(Calendar.DAY_OF_MONTH);
+                    snapshot.getChildren().forEach(dataSnapshot -> {
+                        if(String.valueOf(year).compareTo(dataSnapshot.getKey())==0)
+                        {
+                            dataSnapshot.getChildren().forEach(dataMonth -> {
+                                if(Integer.parseInt(dataMonth.getKey())>=month){
+                                    dataMonth.getChildren().forEach(dataDay->{
+                                        if(month==Integer.parseInt(dataMonth.getKey()) && Integer.parseInt(dataDay.getKey())>=day-1){
+                                            dataDay.getChildren().forEach(eventKey->{
+                                                Log.d(TAG, "onDataChange: Key of"+year+"/"+dataMonth.getKey()+"/"+dataDay.getKey()+" :"+eventKey.getValue());
+                                                database.child(FIREBASE_CHILD_EVENT).child((String) eventKey.getValue()).addValueEventListener(new ValueEventListener() {
+                                                    @Override
+                                                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                                        Event event=snapshot.getValue(Event.class);
+                                                        Log.d(TAG, "onDataChange: "+event);
+                                                        if (!Singleton.getInstance().getEventKeyIndexer().containsKey(event.key))
+                                                        {
+                                                            Singleton.getInstance().getEvents().add(event);
+                                                            Singleton.getInstance().getEventKeyIndexer().put(event.getKey(),Singleton.getInstance().getEvents().size()-1);
+                                                        }
+                                                        else {
+                                                            int id=Singleton.getInstance().getEventKeyIndexer().get(event.getKey());
+                                                            Singleton.getInstance().getEvents().set(id,event);
+                                                        }
+                                                        showEvents();
+                                                    }
+
+                                                    @Override
+                                                    public void onCancelled(@NonNull DatabaseError error) {
+
+                                                    }
+                                                });
+                                            });
+                                        }
+                                        else if(month<Integer.parseInt(dataMonth.getKey())){
+                                            dataDay.getChildren().forEach(eventKey->{
+                                                Log.d(TAG, "onDataChange: Key of"+year+"/"+dataMonth.getKey()+"/"+dataDay.getKey()+" :"+eventKey.getValue());
+                                                database.child(FIREBASE_CHILD_EVENT).child((String) eventKey.getValue()).addValueEventListener(new ValueEventListener() {
+                                                    @Override
+                                                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                                        Event event=snapshot.getValue(Event.class);
+                                                        Log.d(TAG, "onDataChange: "+event);
+                                                        if (!Singleton.getInstance().getEventKeyIndexer().containsKey(event.key))
+                                                        {
+                                                            Singleton.getInstance().getEvents().add(event);
+                                                            Singleton.getInstance().getEventKeyIndexer().put(event.getKey(),Singleton.getInstance().getEvents().size()-1);
+                                                        }
+                                                        else {
+                                                            int id=Singleton.getInstance().getEventKeyIndexer().get(event.getKey());
+                                                            Singleton.getInstance().getEvents().set(id,event);
+                                                        }
+                                                        showEvents();
+                                                    }
+
+                                                    @Override
+                                                    public void onCancelled(@NonNull DatabaseError error) {
+
+                                                    }
+                                                });
+                                            });
+                                        }
+                                    });
+                                }
+                                else
+                                    Log.d(TAG, "onDataChange:"+dataMonth.getKey()+"="+month);
+                            });
+                        }
                     });
-                    m.setTextLabelBackgroundColor(Color.TRANSPARENT);
-                    m.setTextIcon(e.getTitle());
-                    m.setPosition(new GeoPoint(e.lat,e.lon));
-                    map.getOverlays().add(m);
-                    eventsOverlay = new ItemizedIconOverlay<>(items, new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
-                        @Override
-                        public boolean onItemSingleTapUp(int index, OverlayItem item) {
-                            Address address;
-                            IGeoPoint p = item.getPoint();
-                            popUpBtn.setText("View Event");
-                            cancelBtn.setOnClickListener(v -> {
-                                popUpCardView.setVisibility(View.INVISIBLE);
-                            });
-                            popUpBtn.setOnClickListener(v -> {
-                                popUpCardView.setVisibility(View.INVISIBLE);
-                                Intent intent=new Intent(that,EventActivity.class);
-                                intent.putExtra("key",e.getKey());
-                                startActivity(intent);
-                            });
-
-                            try {
-                                address= getAddressFromLonAndLat(p.getLatitude(),p.getLongitude());
-                                if(!Singleton.getInstance().getUser().bookmarkedEventsID.contains(e.key)){
-                                    popupBookmarkImageView.setImageResource(R.drawable.bookmark);
-                                }
-                                else{
-                                    popupBookmarkImageView.setImageResource(R.drawable.bookmarkx);
-                                }
-                                popupBookmarkImageView.setOnClickListener(v -> {
-                                    if(!Singleton.getInstance().getUser().bookmarkedEventsID.contains(e.key)){
-                                        Singleton.getInstance().getUser().bookmarkedEventsID.add(e.key);
-                                        database.child("users").child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").child("" + (Singleton.getInstance().getUser().bookmarkedEventsID.size() - 1)).setValue(e.key);
-                                        popupBookmarkImageView.setImageResource(R.drawable.bookmarkx);
-                                    }
-                                    else{
-                                        Singleton.getInstance().getUser().bookmarkedEventsID.remove(e.key);
-                                        database.child("users").child(auth.getCurrentUser().getUid()).child("bookmarkedEventsID").setValue(Singleton.getInstance().getUser().bookmarkedEventsID);
-                                        popupBookmarkImageView.setImageResource(R.drawable.bookmark);
-                                    }
-                                    Toast.makeText(that, "nesto", Toast.LENGTH_SHORT).show();
-                                });
-                                popupTextView1.setText(item.getTitle());
-                                popupTextView2.setText(address.getAddressLine(0).substring(0,address.getAddressLine(0).indexOf(",")));
-                                popUpCardView.setVisibility(View.VISIBLE);
-                                Event e=getEvents().get(index);
-                                popUpTextView3.setText(e.getAttendeesID().size()+"/"+e.getMaxOccupancy());
-                                popUpCardView.setVisibility(View.VISIBLE);
-
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-
-                            return false;
-                        }
-
-                        @Override
-                        public boolean onItemLongPress(int index, OverlayItem item) {
-//                Intent i = new Intent(MyPlacesMapsActivity.this, ViewMyPlaceActivity.class);
-//                i.putExtra("position", index);
-//                startActivityForResult(i, 5);
-                            return true;
-                        }
-                    }, getApplicationContext());
-                    map.getOverlays().add(eventsOverlay);
-                    map.invalidate();
-
                 }
 
                 @Override
-                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                    Event event=dataSnapshot.getValue(Event.class);
-                    int index=Singleton.getInstance().getEventKeyIndexer().get(event.key);
-                    getEvents().set(index,event);
-                }
-
-                @Override
-                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-                    Event event=dataSnapshot.getValue(Event.class);
-                    int index=Singleton.getInstance().getEventKeyIndexer().get(event.key);
-                    getEvents().remove(index);
-                    Singleton.getInstance().resetEventKeyIndexer();
-                }
-
-                @Override
-                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
+                public void onCancelled(@NonNull DatabaseError error) {
 
                 }
             });
-
         }
     }
 

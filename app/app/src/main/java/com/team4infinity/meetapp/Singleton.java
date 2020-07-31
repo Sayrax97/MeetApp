@@ -27,9 +27,11 @@ import com.team4infinity.meetapp.models.User;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 
 
@@ -79,39 +81,121 @@ public class Singleton {
 
             }
         });
-        database.child(FIREBASE_CHILD_EVENT).addChildEventListener(new ChildEventListener() {
+//        database.child(FIREBASE_CHILD_EVENT).addChildEventListener(new ChildEventListener() {
+//            @Override
+//            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//                Event event=dataSnapshot.getValue(Event.class);
+//                if (!eventKeyIndexer.containsKey(event.key))
+//                    {
+//                        events.add(event);
+//                        eventKeyIndexer.put(event.getKey(),events.size()-1);
+//                    }
+//            }
+//
+//            @Override
+//            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//                Event event=dataSnapshot.getValue(Event.class);
+//                int index=eventKeyIndexer.get(event.key);
+//                events.set(index,event);
+//            }
+//
+//            @Override
+//            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+//                Event event=dataSnapshot.getValue(Event.class);
+//                int index=eventKeyIndexer.get(event.key);
+//                events.remove(index);
+//                resetEventKeyIndexer();
+//            }
+//
+//            @Override
+//            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+        database.child(FIREBASE_CHILD_EBD).addValueEventListener(new ValueEventListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                Event event=dataSnapshot.getValue(Event.class);
-                if (!eventKeyIndexer.containsKey(event.key))
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Date date=new Date();
+                Calendar calendar = new GregorianCalendar();
+                calendar.setTime(date);
+                int year = calendar.get(Calendar.YEAR);
+                int month = calendar.get(Calendar.MONTH) + 1;
+                int day = calendar.get(Calendar.DAY_OF_MONTH);
+                snapshot.getChildren().forEach(dataSnapshot -> {
+                    if(String.valueOf(year).compareTo(dataSnapshot.getKey())==0)
                     {
-                        events.add(event);
-                        eventKeyIndexer.put(event.getKey(),events.size()-1);
+                        dataSnapshot.getChildren().forEach(dataMonth -> {
+                            if(Integer.parseInt(dataMonth.getKey())>=month){
+                             dataMonth.getChildren().forEach(dataDay->{
+                                 if(month==Integer.parseInt(dataMonth.getKey()) && Integer.parseInt(dataDay.getKey())>=day-1){
+                                     dataDay.getChildren().forEach(eventKey->{
+                                         Log.d(TAG, "onDataChange: Key of"+year+"/"+dataMonth.getKey()+"/"+dataDay.getKey()+" :"+eventKey.getValue());
+                                         database.child(FIREBASE_CHILD_EVENT).child((String) eventKey.getValue()).addValueEventListener(new ValueEventListener() {
+                                             @Override
+                                             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                                 Event event=snapshot.getValue(Event.class);
+                                                 Log.d(TAG, "onDataChange: "+event);
+                                                 if (!eventKeyIndexer.containsKey(event.key))
+                                                 {
+                                                     events.add(event);
+                                                     eventKeyIndexer.put(event.getKey(),events.size()-1);
+                                                 }
+                                                 else {
+                                                     int id=eventKeyIndexer.get(event.getKey());
+                                                     events.set(id,event);
+                                                 }
+                                             }
+
+                                             @Override
+                                             public void onCancelled(@NonNull DatabaseError error) {
+
+                                             }
+                                         });
+                                     });
+                                 }
+                                 else if(month<Integer.parseInt(dataMonth.getKey())){
+                                     dataDay.getChildren().forEach(eventKey->{
+                                         Log.d(TAG, "onDataChange: Key of"+year+"/"+dataMonth.getKey()+"/"+dataDay.getKey()+" :"+eventKey.getValue());
+                                         database.child(FIREBASE_CHILD_EVENT).child((String) eventKey.getValue()).addValueEventListener(new ValueEventListener() {
+                                             @Override
+                                             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                                 Event event=snapshot.getValue(Event.class);
+                                                 Log.d(TAG, "onDataChange: "+event);
+                                                 if (!eventKeyIndexer.containsKey(event.key))
+                                                 {
+                                                     events.add(event);
+                                                     eventKeyIndexer.put(event.getKey(),events.size()-1);
+                                                 }
+                                                 else {
+                                                     int id=eventKeyIndexer.get(event.getKey());
+                                                     events.set(id,event);
+                                                 }
+                                             }
+
+                                             @Override
+                                             public void onCancelled(@NonNull DatabaseError error) {
+
+                                             }
+                                         });
+                                     });
+                                 }
+                             });
+                            }
+                            else
+                                Log.d(TAG, "onDataChange:"+dataMonth.getKey()+"="+month);
+                        });
                     }
+                });
             }
 
             @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                Event event=dataSnapshot.getValue(Event.class);
-                int index=eventKeyIndexer.get(event.key);
-                events.set(index,event);
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-                Event event=dataSnapshot.getValue(Event.class);
-                int index=eventKeyIndexer.get(event.key);
-                events.remove(index);
-                resetEventKeyIndexer();
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+            public void onCancelled(@NonNull DatabaseError error) {
 
             }
         });
