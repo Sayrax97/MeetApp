@@ -7,7 +7,7 @@
 
 *Currently avaliable for Android v8+*
 
-__Contact us on 4infinty.team@gmail.com if you wanna be a tester__
+__Contact us on 4infinity.team@gmail.com if you wanna be a tester__
 ## Download and run
 __Download and install [Android Studio](https://developer.android.com/studio)__
 ```
